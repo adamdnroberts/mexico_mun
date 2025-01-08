@@ -1,10 +1,10 @@
 library(dplyr)
 library(rdd)
 
-setwd("~/mexico_RD")
+setwd("~/mexico_mun")
 
-load("~/mexico_RD/ingresos.Rdata")
-load("~/mexico_RD/full_dataset_mexelec.Rdata")
+load("~/mexico_RD/data/ingresos.Rdata")
+load("~/mexico_RD/data/full_dataset_mexelec.Rdata")
 
 #merge datasets
 df <- merge(big_df,ing, by = c("mun_id", "year"))
@@ -49,11 +49,30 @@ rd10 <- RDestimate(pi_diff2 ~ PAN_pct, cutpoint = 0.5, data = df)
 summary(rd10)
 
 plot(rd10, range = c(0.5-rd10$bw[1],0.5+rd10$bw[1]))
+abline(v = 0.5, col = "red", lwd = 1)
+title(x = "PAN vote share", y = "Change in % Income from Taxes, t+2")
+
 plot(rd10, range = c(0.5-rd10$bw[2],0.5+rd10$bw[2]))
 plot(rd10, range = c(0.5-rd10$bw[3],0.5+rd10$bw[3]))
 
 rd11 <- RDestimate(pi_diff3 ~ PAN_pct, cutpoint = 0.5, data = df)
 summary(rd11)
+
+#what about changing to changes from the previous year?
+df$new <- df$pct_imp2 - df$pct_imp1
+rdnew <- RDestimate(new ~ PAN_pct, cutpoint = 0.5, data = df)
+summary(rdnew)
+
+plot(rdnew, range = c(0.5-rdnew$bw[1],0.5+rdnew$bw[1]))
+abline(v = 0.5, col = "red", lwd = 1)
+title(x = "PAN vote share", y = "Change in % Income from Taxes, t+2")
+
+plot(rdnew, range = c(0.5-rdnew$bw[2],0.5+rdnew$bw[2]))
+
+
+df$new2 <- df$pct_imp3 - df$pct_imp2
+rdnew2 <- RDestimate(new2 ~ PAN_pct, cutpoint = 0.5, data = df)
+summary(rdnew2)
 
 #participaciones federales
 rd12 <- RDestimate(pct_part0 ~ PAN_pct, cutpoint = 0.5, data = df)
