@@ -50,7 +50,7 @@ summary(rd10)
 
 plot(rd10, range = c(0.5-rd10$bw[1],0.5+rd10$bw[1]))
 abline(v = 0.5, col = "red", lwd = 1)
-title(x = "PAN vote share", y = "Change in % Income from Taxes, t+2")
+title(main = "Effect of PAN win on % income from taxes", x = "PAN vote share", y = "Change in % Income from Taxes, t+2")
 
 plot(rd10, range = c(0.5-rd10$bw[2],0.5+rd10$bw[2]))
 plot(rd10, range = c(0.5-rd10$bw[3],0.5+rd10$bw[3]))

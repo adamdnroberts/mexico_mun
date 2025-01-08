@@ -1,11 +1,12 @@
 library(dplyr)
+library(tidyr)
 library(sf)
 library(ggplot2)
 
-load("~/mexico_RD/full_dataset_mexbudget.Rdata")
-load("~/mexico_RD/full_dataset_mexelec.Rdata")
+load("~/mexico_RD/data/full_dataset_mexbudget.Rdata")
+load("~/mexico_RD/data/full_dataset_mexelec.Rdata")
 
-mex_sf <- read_sf("~/mexico_RD/mun1995shp/Municipios_1995.shp")
+mex_sf <- read_sf("~/mexico_RD/data/mun1995shp/Municipios_1995.shp")
 
 elec_full <- subset(big_df, year >=1995 & year <= 1997)
 elec <- subset(elec_full, select = c(mun_id, prev_PAN_pct))
@@ -14,7 +15,7 @@ elec <- subset(elec_full, select = c(mun_id, prev_PAN_pct))
 #elec_earliest <- elec %>% group_by(mun_id) %>% slice_min(order_by = year, with_ties = FALSE) %>% ungroup()
 #no states with multiple elections in this period, so no need for this
 
-load("~/mexico_RD/mexpop.Rdata")
+load("~/mexico_RD/data/mexpop.Rdata")
 pop_full <- subset(mun_cen_final, year == 1995)
 pop <- subset(pop_full, select = c(mun_id, pop))
 pop <- pop %>% mutate(pop = gsub(",", "", pop))
@@ -39,7 +40,7 @@ size <- as.data.frame(subset(mex_sf, select = c(mun_id,COUNT)))
 #size$area <- as.numeric(size$area)
 size$geometry <- NULL
 
-load("~/mexico_RD/mun_ll.Rdata")
+load("~/mexico_RD/data/mun_ll.Rdata")
 dist <- subset(mun_ll, select = c(mun_full, LAT_DECIMAL, LON_DECIMAL))
 dist <- dist %>% rename(mun_id = mun_full)
 
@@ -136,22 +137,21 @@ create_plot_adj(municipio = "14011") #potentially problematic? Atengo, Jalisco
 refs <- c("08002", "08016", "08021", "08045", "08054", "08062")
 
 
-
-geo_dist <- function(municipio) {
-  df <- subset(dist_df, mun == municipio)
-  
-  mun_vec <- md_mat[,mah_dist$mun_id == municipio]
-  muns <- mah_dist$mun_id[mun_vec <= sort(mun_vec)[6]]
-  
-  
-  for (i in 1:length(muns)) {
-    ref_d <- round(df$d[df$neighbor == muns[i]],2)
-    print(paste("Distance from",municipio,"to",muns[i],"is",ref_d))
-  }
-}
-
-geo_dist("08021")
-geo_dist("14011")
+# geo_dist <- function(municipio) {
+#   df <- subset(dist_df, mun == municipio)
+#   
+#   mun_vec <- md_mat[,mah_dist$mun_id == municipio]
+#   muns <- mah_dist$mun_id[mun_vec <= sort(mun_vec)[6]]
+#   
+#   
+#   for (i in 1:length(muns)) {
+#     ref_d <- round(df$d[df$neighbor == muns[i]],2)
+#     print(paste("Distance from",municipio,"to",muns[i],"is",ref_d))
+#   }
+# }
+# 
+# geo_dist("08021")
+# geo_dist("14011")
 
 #normalizing weights
 md_raw_wt <- 1/md_mat
@@ -165,3 +165,16 @@ summary(maxes)
 max_value <- max(md_norm) # Find the maximum value in the entire matrix 
 row_index <- which(apply(md_norm, 1, function(x) max_value %in% x))
 row.names(md_norm)[152]
+
+md_norm <- as.data.frame(md_norm)
+md_norm$mun_id <- rownames(md_norm)
+
+# Pivot longer 
+md_norm_long <- md_norm %>% 
+  pivot_longer( cols = -mun_id, names_to = "ref_mun_id", values_to = "mah_d" )
+
+md_norm_long$ref_mun_id <- gsub("md_", "", md_norm_long$ref_mun_id)
+
+md_norm_final <- subset(md_norm_long, mah_d > 0)
+
+save(md_norm_final, file = "~/mexico_RD/data/md_normalized.Rdata")
