@@ -38,21 +38,21 @@ df_rdd_top5 <- df_rdd %>%
   slice_head(n = 5) %>%
   ungroup()
 
-avg_ref <- df_rdd_top5 %>% 
+avg_ref5 <- df_rdd_top5 %>% 
   group_by(mun_id) %>%
   summarise(PAN_pct = first(PAN_pct), ref_npp = mean(next_PAN_pct, na.rm = T), main_year = first(main_year), main_estado = first(main_estado), ref_pp = mean(ref_PAN_pct, na.rm = T), md = mean(mah_d, na.rm = T))
 
 DCdensity(avg_ref$PAN_pct, cutpoint = 0.5)
 title(x = "PAN vote share")
 
-avg_ref$change_pp <- avg_ref$ref_npp - avg_ref$ref_pp
+avg_ref5$change_pp <- avg_ref5$ref_npp - avg_ref5$ref_pp
 
-rd5.1 <- RDestimate(ref_npp ~ PAN_pct + ref_pp, cutpoint = 0.5, data = avg_ref)
+rd5.1 <- RDestimate(ref_npp ~ PAN_pct + ref_pp, cutpoint = 0.5, data = avg_ref5)
 summary(rd5.1)
 
 plot(rd5.1, range = c(0.5-rd5.1$bw[3],0.5+rd5.1$bw[3]))
 
-rd5.2 <- RDestimate(change_pp ~ PAN_pct, cutpoint = 0.5, data = avg_ref)
+rd5.2 <- RDestimate(change_pp ~ PAN_pct, cutpoint = 0.5, data = avg_ref5)
 summary(rd5.2)
 
 plot(rd5.2, range = c(0.5-rd5.2$bw[1],0.5+rd5.2$bw[1]))
@@ -67,24 +67,24 @@ df_rdd_top4 <- df_rdd %>%
   slice_head(n = 4) %>%
   ungroup()
 
-avg_ref <- df_rdd_top4 %>% 
+avg_ref4 <- df_rdd_top4 %>% 
   group_by(mun_id) %>%
   summarise(PAN_pct = first(PAN_pct), ref_npp = mean(next_PAN_pct, na.rm = T), main_year = first(main_year), main_estado = first(main_estado), ref_pp = mean(ref_PAN_pct, na.rm = T), md = mean(mah_d, na.rm = T))
 
 DCdensity(avg_ref$PAN_pct, cutpoint = 0.5)
 title(x = "PAN vote share")
 
-avg_ref$change_pp <- avg_ref$ref_npp - avg_ref$ref_pp
+avg_ref4$change_pp <- avg_ref4$ref_npp - avg_ref4$ref_pp
 
 rd5.1 <- RDestimate(ref_npp ~ PAN_pct + ref_pp, cutpoint = 0.5, data = avg_ref)
 summary(rd5.1)
 
 plot(rd5.1, range = c(0.5-rd5.1$bw[3],0.5+rd5.1$bw[3]))
 
-rd5.2 <- RDestimate(change_pp ~ PAN_pct, cutpoint = 0.5, data = avg_ref)
-summary(rd5.2)
+rd4.2 <- RDestimate(change_pp ~ PAN_pct, cutpoint = 0.5, data = avg_ref4)
+summary(rd4.2)
 
-plot(rd5.2, range = c(0.5-rd5.2$bw[1],0.5+rd5.2$bw[1]))
+plot(rd4.2, range = c(0.5-rd5.2$bw[1],0.5+rd5.2$bw[1]))
 title(main = "Effect of PAN win on AVG. nearby PAN vote share", x = "PAN vote share", y = "Avg. PAN vote share, t+1")
 
 #now only top 3
@@ -95,22 +95,22 @@ df_rdd_top3 <- df_rdd %>%
   slice_head(n = 3) %>%
   ungroup()
 
-avg_ref <- df_rdd_top3 %>% 
+avg_ref3 <- df_rdd_top3 %>% 
   group_by(mun_id) %>%
   summarise(PAN_pct = first(PAN_pct), ref_npp = mean(next_PAN_pct, na.rm = T), main_year = first(main_year), main_estado = first(main_estado), ref_pp = mean(ref_PAN_pct, na.rm = T), md = mean(mah_d, na.rm = T))
 
 DCdensity(avg_ref$PAN_pct, cutpoint = 0.5)
 title(x = "PAN vote share")
 
-avg_ref$change_pp <- avg_ref$ref_npp - avg_ref$ref_pp
+avg_ref3$change_pp <- avg_ref3$ref_npp - avg_ref3$ref_pp
 
-rd5.1 <- RDestimate(ref_npp ~ PAN_pct + ref_pp, cutpoint = 0.5, data = avg_ref)
-summary(rd5.1)
+rd3.1 <- RDestimate(ref_npp ~ PAN_pct + ref_pp, cutpoint = 0.5, data = avg_ref3)
+summary(rd3.1)
 
-plot(rd5.1, range = c(0.5-rd5.1$bw[3],0.5+rd5.1$bw[3]))
+plot(rd3.1, range = c(0.5-rd5.1$bw[3],0.5+rd5.1$bw[3]))
 
-rd5.2 <- RDestimate(change_pp ~ PAN_pct, cutpoint = 0.5, data = avg_ref)
-summary(rd5.2)
+rd3.2 <- RDestimate(change_pp ~ PAN_pct, cutpoint = 0.5, data = avg_ref3)
+summary(rd3.2)
 
-plot(rd5.2, range = c(0.5-rd5.2$bw[1],0.5+rd5.2$bw[1]))
+plot(rd3.2, range = c(0.5-rd5.2$bw[1],0.5+rd5.2$bw[1]))
 title(main = "Effect of PAN win on AVG. nearby PAN vote share", x = "PAN vote share", y = "Avg. PAN vote share, t+1")

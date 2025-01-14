@@ -104,6 +104,8 @@ plot(rd1, range = c(0.5-rd1$bw[1],0.5+rd1$bw[1]))
 rd2.2 <- RDestimate(change_pp ~ PAN_pct, cutpoint = 0.5, data = avg_ref3)
 summary(rd2.2)
 
+etable(rd2.2)
+
 plot(rd2.2, range = c(0.5-rd2.2$bw[1],0.5+rd2.2$bw[1]))
 
 #balance test
