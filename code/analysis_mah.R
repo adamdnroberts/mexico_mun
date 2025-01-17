@@ -22,7 +22,7 @@ ref_PAN <- subset(df, select = c(year, mun_id, next_PAN_pct, PAN_pct, estado))
 main_mun_PAN <- subset(df, select = c(year, mun_id, PAN_pct, estado))
 
 #merge datasets using adjacent municipalities index
-ref2 <- merge(md_norm_final,ref_PAN, by = c("mun_id"))
+ref2 <- merge(md_norm_final,ref_PAN, by.x = "ref_mun_id", by.y = "mun_id")
 ref2 <- ref2 %>% rename(ref_PAN_pct = PAN_pct)
 
 df_rdd <- merge(main_mun_PAN,ref2, by = c("mun_id"))
@@ -96,9 +96,6 @@ df_rdd_top3 <- df_rdd %>%
 avg_ref3 <- df_rdd_top3 %>% 
   group_by(mun_id) %>%
   summarise(PAN_pct = first(PAN_pct), ref_npp = mean(next_PAN_pct, na.rm = T), main_year = first(main_year), main_estado = first(main_estado), ref_pp = mean(ref_PAN_pct, na.rm = T), md = mean(mah_d, na.rm = T))
-
-DCdensity(avg_ref$PAN_pct, cutpoint = 0.5)
-title(x = "PAN vote share")
 
 avg_ref3$change_pp <- avg_ref3$ref_npp - avg_ref3$ref_pp
 
