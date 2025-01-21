@@ -135,3 +135,39 @@ result = t.test(below$main_year, above$main_year,
 print(result)
 #no difference in years!!
 
+## Using reference PAN vote share as running variable
+#average of references (distance only)
+avg_ref <- df_rdd %>% 
+  group_by(neighbor) %>%
+  summarise(PAN_pct = mean(PAN_pct, na.rm = T), npp = mean(next_PAN_pct, na.rm = T), ref_npp = mean(next_PAN_pct, na.rm = T), main_year = first(main_year), main_estado = first(main_estado), ref_pp = mean(ref_PAN_pct, na.rm = T), ref_first_pp = first(ref_PAN_pct), d = mean(d, na.rm = T))
+
+summary(avg_ref$PAN_pct)
+
+DCdensity(avg_ref$ref_pp, cutpoint = 0.5)
+title(x = "Reference PAN vote share")
+
+avg_ref$change_pp <- avg_ref$npp - avg_ref$PAN_pct
+
+rd5.1 <- RDestimate(npp ~ ref_pp, cutpoint = 0.5, data = avg_ref)
+summary(rd5.1)
+
+plot(rd5.1, range = c(0.5-rd5.1$bw[1],0.5+rd5.1$bw[1]))
+
+rd5.2 <- RDestimate(change_pp ~ ref_pp, cutpoint = 0.5, data = avg_ref)
+summary(rd5.2)
+
+plot(rd5.2, range = c(0.5-rd5.2$bw[1],0.5+rd5.2$bw[1]))
+title(main = "Effect of PAN win on AVG. nearby PAN vote share", x = "PAN vote share", y = "Change in Avg. PAN vote share, t+1")
+
+
+#how many municipalities are references? to how many other municipalities?
+count_refs5 <- df_rdd %>% group_by(neighbor) %>% summarise(count = n())
+
+ref_muns <- unique(count_refs5$neighbor)
+muns <- unique(df$mun_id)
+muns_df <- as.data.frame(muns)
+test <- merge(muns_df,count_refs5, by.x = "muns", by.y = "neighbor", all.x = T)
+test$count[is.na(test$count)] <- 0
+summary(test$count)
+
+
