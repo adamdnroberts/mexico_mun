@@ -3,25 +3,30 @@ library(dplyr)
 library(rdd)
 library(fixest)
 
-load("~/mexico_RD/data/vec5.Rdata")
-
+load("~/mexico_RD/data/pairwise_distances.Rdata")
 
 load("~/mexico_RD/data/full_dataset_mexelec.Rdata")
 big_df$mun_id <- gsub(" ", "", big_df$Municipio)
 
 df <- subset(big_df, year>= 1995 & year <= 1997 
              #& estado!="Tlaxcala" 
-             & (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PAN" | p2_name == "PAN"))
+             & (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PAN" | p2_name == "PAN")
+             )
 #df$mun_id <- gsub(" ", "", df$Municipio)
 df$PRD_pct <- df$PRD / (df$p1 + df$p2) # PRD percentage compared to top two
 df$PRD_treat <- ifelse(df$PRD_pct > 0.5, 1, 0)
 
 DCdensity(df$PAN_pct[df$year <= 1997], cutpoint = 0.5)
 
+df_ref <- subset(big_df, year>= 1995 & year <= 1997 
+             #& estado!="Tlaxcala" 
+             #& (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PAN" | p2_name == "PAN")
+)
+
 #create smaller datasets for merge
-ref_PAN <- subset(df, select = c(year, mun_id, next_PAN_pct, PAN_pct, estado))
+ref_PAN <- subset(df_ref, select = c(year, mun_id, next_PAN_pct, PAN_pct, estado))
 main_mun_PAN <- subset(df, select = c(year, mun_id, PAN_pct, estado))
-DCdensity(main_mun_PAN$PAN_pct, cutpoint = 0.5)
+DCdensity(ref_PAN$PAN_pct, cutpoint = 0.5)
 
 #merge datasets using adjacent municipalities index
 ref2 <- merge(vec5,ref_PAN, by.x = c("neighbor"), by.y = c("mun_id"))
@@ -31,10 +36,10 @@ df_rdd <- merge(main_mun_PAN,ref2, by.x = c("mun_id"), by.y = c("mun"))
 df_rdd <- df_rdd %>% 
   rename(main_year = year.x, ref_year = year.y, main_estado = estado.x, ref_estado = estado.y)
 
-DCdensity(df_rdd$PAN_pct, cutpoint = 0.5)
+#DCdensity(df_rdd$PAN_pct, cutpoint = 0.5)
 
 #average of references (distance only)
-avg_ref <- df_rdd %>% 
+avg_ref <- df_rdd %>%
   group_by(mun_id) %>%
   summarise(PAN_pct = first(PAN_pct), ref_npp = mean(next_PAN_pct, na.rm = T), main_year = first(main_year), main_estado = first(main_estado), ref_pp = mean(ref_PAN_pct, na.rm = T), d = mean(d, na.rm = T))
 
@@ -99,12 +104,8 @@ avg_ref3$change_pp <- avg_ref3$ref_npp - avg_ref3$ref_pp
 rd3 <- RDestimate(ref_npp ~ PAN_pct, cutpoint = 0.5, data = avg_ref3)
 summary(rd3)
 
-plot(rd1, range = c(0.5-rd1$bw[1],0.5+rd1$bw[1]))
-
 rd2.2 <- RDestimate(change_pp ~ PAN_pct, cutpoint = 0.5, data = avg_ref3)
 summary(rd2.2)
-
-etable(rd2.2)
 
 plot(rd2.2, range = c(0.5-rd2.2$bw[1],0.5+rd2.2$bw[1]))
 
@@ -135,39 +136,69 @@ result = t.test(below$main_year, above$main_year,
 print(result)
 #no difference in years!!
 
-## Using reference PAN vote share as running variable
-#average of references (distance only)
+## Redoing the averages as weighted averages
+df_rdd$weight <- 1/df_rdd$d
+
 avg_ref <- df_rdd %>% 
-  group_by(neighbor) %>%
-  summarise(PAN_pct = mean(PAN_pct, na.rm = T), npp = mean(next_PAN_pct, na.rm = T), ref_npp = mean(next_PAN_pct, na.rm = T), main_year = first(main_year), main_estado = first(main_estado), ref_pp = mean(ref_PAN_pct, na.rm = T), ref_first_pp = first(ref_PAN_pct), d = mean(d, na.rm = T))
+  group_by(mun_id) %>%
+  summarise(PAN_pct = mean(PAN_pct, na.rm = T), npp = mean(next_PAN_pct, na.rm = T), ref_npp = mean(next_PAN_pct, na.rm = T), main_year = first(main_year), main_estado = first(main_estado), ref_pp = mean(ref_PAN_pct, na.rm = T), ref_first_pp = first(ref_PAN_pct), d = mean(d, na.rm = T), weighted_avg_npp = (sum(next_PAN_pct * weight) / sum(weight)), weighted_avg_pp = (sum(ref_PAN_pct * weight) / sum(weight)))
 
-summary(avg_ref$PAN_pct)
+cor(avg_ref$ref_pp, avg_ref$weighted_avg_pp, use = "complete.obs")
 
-DCdensity(avg_ref$ref_pp, cutpoint = 0.5)
+DCdensity(avg_ref$PAN_pct, cutpoint = 0.5)
 title(x = "Reference PAN vote share")
 
-avg_ref$change_pp <- avg_ref$npp - avg_ref$PAN_pct
+avg_ref$change_pp_wt <- avg_ref$weighted_avg_npp - avg_ref$weighted_avg_pp
 
-rd5.1 <- RDestimate(npp ~ ref_pp, cutpoint = 0.5, data = avg_ref)
-summary(rd5.1)
-
-plot(rd5.1, range = c(0.5-rd5.1$bw[1],0.5+rd5.1$bw[1]))
-
-rd5.2 <- RDestimate(change_pp ~ ref_pp, cutpoint = 0.5, data = avg_ref)
+rd5.2 <- RDestimate(change_pp_wt ~ PAN_pct, cutpoint = 0.5, data = avg_ref)
 summary(rd5.2)
 
 plot(rd5.2, range = c(0.5-rd5.2$bw[1],0.5+rd5.2$bw[1]))
 title(main = "Effect of PAN win on AVG. nearby PAN vote share", x = "PAN vote share", y = "Change in Avg. PAN vote share, t+1")
 
+#only 4 closest
+df_rdd_4 <- df_rdd %>%
+  group_by(mun_id) %>%
+  filter(d != max(d)) %>%
+  ungroup()
 
-#how many municipalities are references? to how many other municipalities?
-count_refs5 <- df_rdd %>% group_by(neighbor) %>% summarise(count = n())
+avg_ref4 <- df_rdd_4 %>% 
+  group_by(mun_id) %>%
+  summarise(PAN_pct = mean(PAN_pct, na.rm = T), npp = mean(next_PAN_pct, na.rm = T), ref_npp = mean(next_PAN_pct, na.rm = T), main_year = first(main_year), main_estado = first(main_estado), ref_pp = mean(ref_PAN_pct, na.rm = T), ref_first_pp = first(ref_PAN_pct), d = mean(d, na.rm = T), weighted_avg_npp = (sum(next_PAN_pct * weight) / sum(weight)), weighted_avg_pp = (sum(ref_PAN_pct * weight) / sum(weight)))
 
-ref_muns <- unique(count_refs5$neighbor)
-muns <- unique(df$mun_id)
-muns_df <- as.data.frame(muns)
-test <- merge(muns_df,count_refs5, by.x = "muns", by.y = "neighbor", all.x = T)
-test$count[is.na(test$count)] <- 0
-summary(test$count)
+cor(avg_ref4$ref_pp, avg_ref4$PAN_pct, use = "complete.obs")
 
+DCdensity(avg_ref4$PAN_pct, cutpoint = 0.5)
+title(x = "Reference PAN vote share")
 
+avg_ref4$change_pp_wt <- avg_ref4$weighted_avg_npp - avg_ref4$weighted_avg_pp
+
+rd4wt <- RDestimate(change_pp_wt ~ PAN_pct, cutpoint = 0.5, data = avg_ref4)
+summary(rd4wt)
+
+plot(rd4wt, range = c(0.5-rd5.2$bw[1],0.5+rd5.2$bw[1]))
+title(main = "Effect of PAN win on AVG. nearby PAN vote share", x = "PAN vote share", y = "Change in Avg. PAN vote share, t+1")
+
+#only 3 closest
+df_rdd_3 <- df_rdd %>%
+  group_by(mun_id) %>%
+  arrange(desc(d)) %>%
+  slice(-1:-2) %>%
+  ungroup()
+
+avg_ref3 <- df_rdd_3 %>% 
+  group_by(mun_id) %>%
+  summarise(PAN_pct = mean(PAN_pct, na.rm = T), npp = mean(next_PAN_pct, na.rm = T), ref_npp = mean(next_PAN_pct, na.rm = T), main_year = first(main_year), main_estado = first(main_estado), ref_pp = mean(ref_PAN_pct, na.rm = T), ref_first_pp = first(ref_PAN_pct), d = mean(d, na.rm = T), weighted_avg_npp = (sum(next_PAN_pct * weight) / sum(weight)), weighted_avg_pp = (sum(ref_PAN_pct * weight) / sum(weight)))
+
+cor(avg_ref3$ref_pp, avg_ref3$PAN_pct, use = "complete.obs")
+
+DCdensity(avg_ref3$PAN_pct, cutpoint = 0.5)
+title(x = "Reference PAN vote share")
+
+avg_ref3$change_pp_wt <- avg_ref3$weighted_avg_npp - avg_ref3$weighted_avg_pp
+
+rd3wt <- RDestimate(change_pp_wt ~ PAN_pct, cutpoint = 0.5, data = avg_ref3)
+summary(rd3wt)
+
+plot(rd3wt, range = c(0.5-rd5.2$bw[1],0.5+rd5.2$bw[1]))
+title(main = "Effect of PAN win on AVG. nearby PAN vote share", x = "PAN vote share", y = "Change in Avg. PAN vote share, t+1")
