@@ -92,4 +92,4 @@ dH_df$dH <- as.numeric(dH_df$dH)
 hist(dH_df$dH)
 summary(dH_df$dH)
 
-save(dH_df, file = "~/mexico_RD/pairwise_distances_km.Rdata")
+save(dH_df, file = "C:/Users/adamd/Documents/mexico_mun/data/pairwise_km.Rdata")
