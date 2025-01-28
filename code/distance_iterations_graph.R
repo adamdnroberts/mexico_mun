@@ -49,6 +49,7 @@ save(df_rdd, file = "~/mexico_RD/data/rdd_near.Rdata")
 df_rdd_sorted <- df_rdd %>%
   arrange(mun_id, dH)
 
+<<<<<<< HEAD
 # Pre-allocate the result matrix
 robust_est <- matrix(NA, nrow = 100, ncol = 6)
 
@@ -93,6 +94,8 @@ print(p)
 
 #COLLECT ALL THREE BANDWIDTHS WITH rdd
 
+=======
+>>>>>>> a224d81dc5ffc3b8db1b4a2ae5bab161a4dc1f83
 # Pre-allocate the result matrix
 bw_estimates <- matrix(NA, nrow = 100, ncol = 4)
 bw_half_estimates <- matrix(NA, nrow = 100, ncol = 4)
@@ -121,6 +124,67 @@ for (n in n_values) {
   
   #bw_estimates[n, ] <- c(md_n$est[1], md_n$ci[1, 1], md_n$ci[1, 2], n)
   bw_estimates[n, ] <- c(md_rdr$coef[1], md_rdr$ci[1, 1], md_rdr$ci[1, 2], n)
+}
+
+
+# Create a data frame for the plot
+bw_df <- as.data.frame(bw_estimates)
+colnames(bw_df) <- c("est", "ci_lower","ci_upper","n")
+
+bw_df_half <- as.data.frame(bw_half_estimates)
+colnames(bw_df_half) <- c("est", "ci_lower","ci_upper","n")
+
+bw_df_dbl <- as.data.frame(bw_dbl_estimates)
+colnames(bw_df_dbl) <- c("est", "ci_lower","ci_upper","n")
+
+# Create the plot
+p <- ggplot(bw_df, aes(x = n, y = est)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
+  labs(x = "Number of References in Average", y = "Estimate", title = "RD Estimates by number of references included") +
+  theme_minimal() 
+
+# Display the plot
+print(p)
+
+
+#COLLECT ALL THREE ESTIMATES
+
+# Pre-allocate the result matrix
+bw_estimates <- matrix(NA, nrow = 100, ncol = 4)
+bw_half_estimates <- matrix(NA, nrow = 100, ncol = 4)
+bw_dbl_estimates <- matrix(NA, nrow = 100, ncol = 4)
+
+
+# Vector of n values
+n_values <- 1:100
+
+# Loop through n values
+for (n in n_values) {
+  df_n <- df_rdd_sorted %>%
+    group_by(mun_id) %>%
+    slice_head(n = n) %>%
+    summarise(
+      PAN_pct = mean(PAN_pct, na.rm = TRUE),
+      weighted_avg_npp = sum(next_PAN_pct * weight) / sum(weight),
+      weighted_avg_pp = sum(ref_PAN_pct * weight) / sum(weight)
+    )
+  
+  df_n <- df_n %>%
+    mutate(change_pp_wt = weighted_avg_npp - weighted_avg_pp)
+  
+  #md_n <- RDestimate(change_pp_wt ~ PAN_pct, cutpoint = 0.5, data = df_n)
+  md_rdr <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, c = 0.5, p = 1, bwselect = "mserd")
+  
+<<<<<<< HEAD
+  bw_estimates[n, ] <- c(md_n$est[1], md_n$ci[1, 1], md_n$ci[1, 2], n)
+  bw_half_estimates[n, ] <- c(md_n$est[2], md_n$ci[2, 1], md_n$ci[2, 2], n)
+  bw_dbl_estimates[n, ] <- c(md_n$est[3], md_n$ci[3, 1], md_n$ci[3, 2], n)
+=======
+  
+  #bw_estimates[n, ] <- c(md_n$est[1], md_n$ci[1, 1], md_n$ci[1, 2], n)
+  bw_estimates[n, ] <- c(md_rdr$coef[1], md_rdr$ci[1, 1], md_rdr$ci[1, 2], n)
+>>>>>>> a224d81dc5ffc3b8db1b4a2ae5bab161a4dc1f83
 }
 
 

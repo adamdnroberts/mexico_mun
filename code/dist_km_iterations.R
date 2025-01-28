@@ -37,7 +37,6 @@ df_rdd <- merge(main_mun_PAN,ref2, by.x = c("mun_id"), by.y = c("mun"))
 df_rdd <- df_rdd %>% 
   rename(main_year = year.x, ref_year = year.y, main_estado = estado.x, ref_estado = estado.y)
 
-<<<<<<< HEAD
 df_rdd$weight <- 1/df_rdd$dH
 
 save(df_rdd, file = "C:/Users/adamd/Documents/mexico_mun/data/rdd_distance.Rdata")
@@ -89,3 +88,4 @@ ggplot(data = robust_est, aes(x = km, y = est)) +
   #geom_hline(yintercept = 0, color = "darkgray") + 
   labs(x = "KM limit", y = "Estimate", title = "RD Robust Estimates, weighted average by km distance") +
   theme_minimal()
+
