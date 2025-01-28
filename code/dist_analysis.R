@@ -29,7 +29,7 @@ main_mun_PAN <- subset(df, select = c(year, mun_id, PAN_pct, estado))
 DCdensity(ref_PAN$PAN_pct, cutpoint = 0.5)
 
 #merge datasets using adjacent municipalities index
-ref2 <- merge(vec5,ref_PAN, by.x = c("neighbor"), by.y = c("mun_id"))
+ref2 <- merge(dist_df,ref_PAN, by.x = c("neighbor"), by.y = c("mun_id"))
 ref2 <- ref2 %>% rename(ref_PAN_pct = PAN_pct)
 
 df_rdd <- merge(main_mun_PAN,ref2, by.x = c("mun_id"), by.y = c("mun"))
