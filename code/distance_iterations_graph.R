@@ -4,9 +4,6 @@ library(rdd)
 library(viridis)
 library(rdrobust)
 
-<<<<<<< HEAD
-load("~/mexico_mun/data/rdd_distance.Rdata")
-=======
 load("~/mexico_RD/data/pairwise_distances.Rdata")
 
 load("~/mexico_RD/data/full_dataset_mexelec.Rdata")
@@ -29,6 +26,9 @@ df_ref <- subset(big_df, year>= 1995 & year <= 1997
 
 #create smaller datasets for merge
 ref_PAN <- subset(df_ref, select = c(year, mun_id, next_PAN_pct, PAN_pct, estado))
+ref_PAN$PAN_runs_next <- ifelse(ref_PAN$next_PAN_pct > 0, 1, 0)
+summary(ref_PAN$PAN_runs_next)
+
 main_mun_PAN <- subset(df, select = c(year, mun_id, PAN_pct, estado))
 DCdensity(ref_PAN$PAN_pct, cutpoint = 0.5)
 

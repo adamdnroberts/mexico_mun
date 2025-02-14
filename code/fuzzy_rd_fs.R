@@ -1,5 +1,6 @@
 library(dplyr)
 library(rdd)
+library(rdrobust)
 
 setwd("~/mexico_mun")
 
@@ -8,7 +9,7 @@ load("~/mexico_RD/data/full_dataset_mexelec.Rdata")
 
 #merge datasets
 df <- merge(big_df,ing, by = c("mun_id", "year"))
-df <- subset(df, year <= 1997)
+df <- subset(df, year <= 1999 & year >=1994)
 
 DCdensity(df$PAN_pct, cutpoint = 0.5)
 
@@ -55,8 +56,19 @@ title(main = "Effect of PAN win on % income from taxes", x = "PAN vote share", y
 plot(rd10, range = c(0.5-rd10$bw[2],0.5+rd10$bw[2]))
 plot(rd10, range = c(0.5-rd10$bw[3],0.5+rd10$bw[3]))
 
+rdbwselect(y = df$pi_diff2, x = df$PAN_pct, c = 0.5)
+
+robust_taxes <- rdrobust(y = df$pi_diff2, x = df$PAN_pct, c = 0.5, bwselect = "mserd")
+summary(robust_taxes)
+
+plot(robust_taxes)
+
+rd10 <- rdrobust(pi_diff2 ~ PAN_pct, cutpoint = 0.5, data = df)
+summary(rd10)
+
 rd11 <- RDestimate(pi_diff3 ~ PAN_pct, cutpoint = 0.5, data = df)
 summary(rd11)
+
 
 #what about changing to changes from the previous year?
 df$new <- df$pct_imp2 - df$pct_imp1
