@@ -5,13 +5,13 @@ library(data.table)
 library(readxl)
 library(rdd)
 
-setwd("~/mexico_RD")
+setwd("~/mexico_mun")
 
 ##LOOPS##
 
 bdfs <- list()
 for (year in 1989:2023){
-   df <- read.csv(paste0("~/mexico_RD/efipem_municipal_csv/conjunto_de_datos/efipem_municipal_anual_tr_cifra_",year,".csv"))
+   df <- read.csv(paste0("~/mexico_mun/raw/efipem_municipal_csv/conjunto_de_datos/efipem_municipal_anual_tr_cifra_",year,".csv"))
    #df_name <- paste0("y",year)
    #assign(df_name, df)
    bdfs <- append(bdfs,list(df = df))
@@ -64,7 +64,7 @@ ing <-ing %>%
 
 ing$pct_imp0 <- ing$imp0/ing$ing0
 ing$pct_part0 <- ing$part0/ing$ing0
-ing$pct_ayd0 <- ing$ayd0/ing$eg0
+ing$pct_ayd0 <- ing$ayd0/ing$ing0
 
 # Define the lags you want to include
 lags <- 1:3
@@ -82,6 +82,8 @@ setDT(ing)[, paste0("pct_imp", lags) := lapply(lags, function(x) shift(pct_imp0,
 setDT(ing)[, paste0("pct_part", lags) := lapply(lags, function(x) shift(pct_part0, x, fill = NA, type = "lead")), by = mun_id]
 
 setDT(ing)[, paste0("pct_ayd", lags) := lapply(lags, function(x) shift(pct_ayd0, x, fill = NA, type = "lead")), by = mun_id]
+
+setDT(ing)[, paste0("ayd", lags) := lapply(lags, function(x) shift(ayd0, x, fill = NA, type = "lead")), by = mun_id]
 
 #test <- subset(ing, mun_id == "01001")
 
@@ -106,4 +108,8 @@ ing$pa_diff1 <- ing$pct_ayd1 - ing$pct_ayd0
 ing$pa_diff2 <- ing$pct_ayd2 - ing$pct_ayd0
 ing$pa_diff3 <- ing$pct_ayd3 - ing$pct_ayd0
 
-save(ing, file = "~/mexico_RD/ingresos.Rdata")
+ing$ayd_diff1 <- ing$pct_ayd1 - ing$ayd0
+ing$ayd_diff2 <- ing$pct_ayd2 - ing$ayd0
+ing$ayd_diff3 <- ing$pct_ayd3 - ing$ayd0
+
+save(ing, file = "~/mexico_mun/data/ingresos.Rdata")
