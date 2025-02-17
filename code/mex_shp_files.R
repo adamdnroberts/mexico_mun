@@ -5,7 +5,7 @@ library(sf)
 library(ggplot2)
 library(dplyr)
 
-mex_sf <- read_sf("~/mexico_RD/mun1995shp/Municipios_1995.shp")
+mex_sf <- read_sf("~/mexico_mun/raw/mun1995shp/Municipios_1995.shp")
 mex_sf$mun_full <- paste0(mex_sf$CVE_ENT,mex_sf$CVE_MUN)
 
 adj_matrix <- st_intersects(mex_sf, mex_sf, sparse = F)

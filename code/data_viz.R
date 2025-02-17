@@ -4,16 +4,20 @@ library(data.table)
 library(readxl)
 library(rdd)
 
-setwd("~/mexico_RD")
-
 #dataviz
-load("~/mexico_RD/full_dataset_mexelec.Rdata")
+load("~/mexico_mun/data/full_dataset_mexelec.Rdata")
 
-df <- subset(big_df, year>=1998 & year <= 2000) # & (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PAN" | p2_name == "PAN"))
+df <- subset(big_df, year>=1995 & year <= 2000) # & (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PAN" | p2_name == "PAN"))
 
-DCdensity(df$PAN_pct, cutpoint = 0.5)
-abline(v = 0.5, col = "red", lwd = 2)
+df_plot <- subset(big_df, year>=1995 & year <= 1997)
+
+png(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/3YP_Presentation_2_17_25/images/McCrary.png", width = 6, height = 4, units = "in", res = 300)
+DCdensity(df_plot$PAN_pct, cutpoint = 0.5)
+abline(v = 0.5, col = "red", lwd = 0.5)
 title(x = "PAN vote share")
+dev.off()
+
+## OLD CODE ##
 
 next_elec <- RDestimate(next_PAN_pct ~ PAN_pct, cutpoint = 0.5, data = df)
 summary(next_elec)
@@ -38,4 +42,3 @@ ggplot(df, aes(x = PAN_pct)) +
   geom_vline(xintercept = 0.5, color = "red") +
   facet_wrap(~estado) +
   theme_minimal()
-

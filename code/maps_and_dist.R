@@ -8,12 +8,13 @@ library(dplyr)
 library(ggplot2)
 library(sf)
 
-mex_sf <- read_sf("~/mexico_RD/mun1995shp/Municipios_1995.shp")
-load("~/mexico_RD/full_dataset_mexelec.Rdata")
+mex_sf <- read_sf("~/mexico_mun/raw/mun1995shp/Municipios_1995.shp")
+load("~/mexico_mun/data/full_dataset_mexelec.Rdata")
 
 mex_sf$Municipio <- paste(mex_sf$CVE_ENT,mex_sf$CVE_MUN)
 
-df <- subset(big_df, (year>=1994 & year<=1996 & estado!="Tlaxcala")|(year==1994 & estado=="Tlaxcala"))
+df <- subset(big_df, (year>=1995 & year<=1997))
+                      #& estado!="Tlaxcala")|(year==1994 & estado=="Tlaxcala"))
 
 df_geom <- merge(df,mex_sf, by = "Municipio", all = TRUE)
 
@@ -24,11 +25,15 @@ ggplot(df_geom) +
 
 df_geom$PANwin <- ifelse(!is.na(df_geom$PAN_pct),ifelse(df_geom$PAN_pct >= 0.5,1,0),NA)
 
-ggplot(df_geom) +
+PAN_win_map <- ggplot(df_geom) +
   geom_sf(color = "white", aes(geometry = geometry, fill = as.factor(PANwin))) +
-  labs(title = "Municipal Elections, 1994-1996", fill = "") +
+  labs(title = "Municipal Elections, 1995-1997", fill = "") +
   scale_fill_manual( values = c("1" = "darkblue", "0" = "lightblue", "NA" = "gray"), labels = c("1" = "PAN Wins", "0" = "PAN Loses", "NA" = "Not Available"), na.value = "gray") +
-  theme_void()
+  theme_void() +
+  theme(legend.position = "bottom")
+
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/3YP_Presentation_2_17_25/images/PAN_win_map.png", plot = PAN_win_map, width = 6, height = 4)
+
 
 # Assuming df is your dataframe
 test <- df %>%
