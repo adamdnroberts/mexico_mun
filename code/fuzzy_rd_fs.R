@@ -93,16 +93,18 @@ ci_data <- bind_rows(
 )
 
 # Create the plot
-ggplot(ci_data, aes(x = Model, y = Coefficient)) +
+taxation <- ggplot(ci_data, aes(x = Model, y = Coefficient)) +
   geom_point() +
   geom_hline(yintercept = 0, linetype = "dashed", color = "blue") +
-  geom_shape(aes(ymin = CI_Lower, ymax = CI_Upper), width = 0.2) +
+  geom_errorbar(aes(ymin = CI_Lower, ymax = CI_Upper), width = 0.2) +
   geom_errorbar(aes(ymin = CI_Lower90, ymax = CI_Upper90), width = 0.2, alpha = 0.5, color = "red") +
   theme_minimal() +
   labs(title = "Effect of PAN win on municipal taxation",
        subtitle = "Robust 95% (black) and 90% (red) CIs",
        x = "",
        y = "% increase in income from taxes")
+
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/3YP_Presentation_2_17_25/images/taxation.png", plot = taxation, width = 6, height = 4)
 
 #what about changing to changes from the previous year?
 df$new <- df$pct_imp2 - df$pct_imp1
