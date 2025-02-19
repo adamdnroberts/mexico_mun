@@ -4,11 +4,11 @@ library(data.table)
 library(readxl)
 library(rdd)
 
-setwd("~/mexico_RD")
+setwd("~/mexico_mun/raw")
 
 ##LOOPS##
 
-source("process_df.R")
+source("~/mexico_mun/code/process_df.R")
 
 estados <- c("Aguascalientes","Baja California Sur","Baja California","Campeche","Chiapas","Chihuahua","Coahuila","Colima","Distrito Federal","Durango","Guanajuato","Guerrero","Hidalgo","Jalisco","Mexico","Michoacan","Morelos","Nayarit","Nuevo Leon","Oaxaca","Puebla","Queretaro","Quintana Roo","San Luis Potos","Sinaloa","Sonora","Tabasco","Tamaulipas","Tlaxcala","Veracruz","Yucatan","Zacatecas")
 

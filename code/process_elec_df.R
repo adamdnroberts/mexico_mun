@@ -29,8 +29,8 @@ process_df <- function(df) {
   
   df$p1[df$p1 < 0] <- NA
   
-  df$PAN_pct <- df$PAN / (df$p1 + df$p2) # PAN percentage compared to top two
-  df$PAN_treat <- ifelse(df$PAN_pct > 0.5, 1, 0)
+  df$PAN_pct <- (df$PAN / (df$p1 + df$p2)) - 0.5 # PAN percentage compared to top two
+  df$PAN_treat <- ifelse(df$PAN_pct > 0, 1, 0)
   
   df$PRD_pct <- df$PRD / (df$p1 + df$p2) # PAN percentage compared to top two
   df$PRD_treat <- ifelse(df$PRD_pct > 0.5, 1, 0)
