@@ -3,8 +3,6 @@ library(rdd)
 library(rdrobust)
 library(ggplot2)
 
-setwd("~/mexico_mun")
-
 load("~/mexico_mun/data/ingresos.Rdata")
 load("~/mexico_mun/data/full_dataset_mexelec.Rdata")
 
@@ -61,6 +59,9 @@ rd11 <- RDestimate(pi_diff3 ~ PAN_pct, cutpoint = 0.5, data = df)
 summary(rd11)
 
 #rdrobust estimates
+df <-  subset(big_df, year >= 1995 & year <= 1997)
+              #& estado != "Gunajuato" & estado != "Chihuahua" & estado != "Baja California" & estado != "Jalisco")
+
 robust_taxes0 <- rdrobust(y = df$pct_imp0, x = df$PAN_pct, c = 0.5, bwselect = "mserd")
 summary(robust_taxes0)
 
@@ -92,6 +93,13 @@ ci_data <- bind_rows(
   extract_ci(robust_taxes3, "t+3")
 )
 
+#t model is confusing, change to zero
+ci_data[1,2] <- 0
+ci_data[1,3] <- NA
+ci_data[1,4] <- NA
+ci_data[1,5] <- NA
+ci_data[1,6] <- NA
+
 # Create the plot
 taxation <- ggplot(ci_data, aes(x = Model, y = Coefficient)) +
   geom_point() +
@@ -103,6 +111,8 @@ taxation <- ggplot(ci_data, aes(x = Model, y = Coefficient)) +
        subtitle = "Robust 95% (black) and 90% (red) CIs",
        x = "",
        y = "% increase in income from taxes")
+
+print(taxation)
 
 ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/3YP_Presentation_2_17_25/images/taxation.png", plot = taxation, width = 6, height = 4)
 
@@ -123,16 +133,18 @@ rdnew2 <- RDestimate(new2 ~ PAN_pct, cutpoint = 0.5, data = df)
 summary(rdnew2)
 
 #participaciones federales
-rd12 <- RDestimate(pct_part0 ~ PAN_pct, cutpoint = 0.5, data = df)
+df$estado <- as.factor(df$estado)
+
+rd12 <- rdrobust(df$pct_part0, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
 summary(rd12)
 
-rd13 <- RDestimate(pp_diff1 ~ PAN_pct, cutpoint = 0.5, data = df)
+rd13 <- rdrobust(df$pp_diff1, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
 summary(rd13)
 
-rd14 <- RDestimate(pp_diff2 ~ PAN_pct, cutpoint = 0.5, data = df)
+rd14 <- rdrobust(df$pp_diff2, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
 summary(rd14)
 
-rd15 <- RDestimate(pp_diff3 ~ PAN_pct, cutpoint = 0.5, data = df)
+rd15 <- rdrobust(df$pp_diff3, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
 summary(rd15)
 
 #ayudas sociales (pct de egresos)

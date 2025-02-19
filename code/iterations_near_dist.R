@@ -7,6 +7,8 @@ library(RDHonest)
 
 load("~/mexico_mun/data/rdd_distance.Rdata")
 
+df_rdd$ref_PAN_wins_t <- ifelse(df_rdd$ref_PAN_pct > 0, 1, 0)
+
 # First, sort by mun_id and then by d
 df_rdd_sorted <- df_rdd %>%
   arrange(mun_id, dH)
@@ -68,18 +70,19 @@ df_1 <- df_rdd_sorted %>%
   slice_head(n = 1)
 
 df_1 <- df_1 %>%
-  mutate(change_pp = next_PAN_pct - ref_PAN_pct)
+  mutate(change_pp = ref_next_PAN_pct - ref_PAN_pct)
+
+df_1$main_estado <- as.factor(df_1$main_estado)
+df_1$ref_estado <- as.factor(df_1$ref_estado)
 
 #md_n <- RDestimate(change_pp_wt ~ PAN_pct, cutpoint = 0.5, data = df_n)
-one_ref <- rdrobust(y = df_1$change_pp, x = df_1$PAN_pct, c = 0.5, p = 1, bwselect = "mserd")
+one_ref <- rdrobust(y = df_1$ref_PAN_wins_t, x = df_1$PAN_pct, covs = cbind(df_1$main_year,df_1$ref_year,df_1$main_estado, df_1$ref_estado), p = 1, bwselect = "cerrd")
 summary(one_ref)
 
-df_1$PAN_pct = df_1$PAN_pct - 0.5
-
-rdr_bw <- rdbwselect(y = df_1$change_pp, x = df_1$PAN_pct, bwselect = "mserd")
+rdr_bw <- rdbwselect(y = df_1$ref_PAN_wins_t, x = df_1$PAN_pct, bwselect = "cerrd")
 
 png(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/3YP_Presentation_2_17_25/images/rdplot_nearest.png", width = 6, height = 4, units = "in", res = 300)
-rdplot(y = df_1$change_pp, x = df_1$PAN_pct, h = rdr_bw$bws[1], p = 1, subset = abs(df_1$PAN_pct) < rdr_bw$bws[1], title = "RD for nearest municipality", x.label = "PAN Vote Share, t", y.label = "Nearest Municipalitiy PAN vote share, t+1")
+rdplot(y = df_1$ref_PAN_wins_t, x = df_1$PAN_pct, h = rdr_bw$bws[1], p = 1, subset = abs(df_1$PAN_pct) < rdr_bw$bws[1], title = "RD for nearest municipality", x.label = "PAN Vote Share, t", y.label = "Nearest Municipalitiy PAN vote share, t+1")
 dev.off()
 
 png(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/3YP_Presentation_2_17_25/images/rdplot_nearest_full_running.png", width = 6, height = 4, units = "in", res = 300)
