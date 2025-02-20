@@ -2,13 +2,16 @@ library(dplyr)
 library(rdd)
 library(rdrobust)
 library(ggplot2)
+library(data.table)
 
-load("~/mexico_mun/data/ingresos.Rdata")
+load("~/mexico_mun/data/full_dataset_mexbudget.Rdata")
 load("~/mexico_mun/data/full_dataset_mexelec.Rdata")
 
+wide_budget_df$year <- wide_budget_df$ANIO
+
 #merge datasets
-df <- merge(big_df,ing, by = c("mun_id", "year"))
-df <- subset(df, year <= 1999 & year >= 1994)
+df <- merge(big_df,wide_budget_df, by = c("mun_id", "year"))
+df <- subset(df, year <= 2000 & year >= 1995)
 
 DCdensity(df$PAN_pct, cutpoint = 0.5)
 
@@ -147,53 +150,25 @@ summary(rd14)
 rd15 <- rdrobust(df$pp_diff3, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
 summary(rd15)
 
-#ayudas sociales (pct de egresos)
-rd12 <- RDestimate(pct_ayd0 ~ PAN_pct, cutpoint = 0.5, data = df)
+#participaciones diversas
+lags <- 1:3
+
+# Order the dataframe ing by year
+df <- df %>% arrange(year)
+
+setDT(df)[, paste0("diversas", lags) := lapply(lags, function(x) shift(Ingresos.Partida.Genérica.Participaciones.diversas, x, fill = NA, type = "lead")), by = mun_id]
+
+rd12 <- rdrobust(log(df$Ingresos.Partida.Genérica.Participaciones.diversas), df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
 summary(rd12)
 
-rd13 <- RDestimate(pa_diff1 ~ PAN_pct, cutpoint = 0.5, data = df)
-summary(rd13) #very small sample, so I don't really trust this
+rd13 <- rdrobust(df$diversas1, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+summary(rd13)
 
-pct_as1 <- rdrobust(y = df$pa_diff1, x = df$PAN_pct, c = 0.5, bwselect = "mserd")
-summary(pct_as1)
-
-test <- subset(df, PAN_pct <= 0.5 + pct_as1$bws[1,1] & PAN_pct >= 0.5 - pct_as1$bws[1,1])
-rdplot(y = test$pa_diff1, x = test$PAN_pct, c = 0.5, p = 1)
-
-rd14 <- RDestimate(pa_diff2 ~ PAN_pct, cutpoint = 0.5, data = df)
+rd14 <- rdrobust(df$diversas2, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
 summary(rd14)
 
-pct_as2 <- rdrobust(y = df$pa_diff2, x = df$PAN_pct, c = 0.5, bwselect = "mserd")
-summary(pct_as2)
-
-rdplot(y = df$pa_diff2, x = df$PAN_pct, c = 0.5, p = 1)
-
-
-rd15 <- RDestimate(pa_diff3 ~ PAN_pct, cutpoint = 0.5, data = df)
+rd15 <- rdrobust(df$diversas3, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
 summary(rd15)
 
-#ayudas sociales (no transformation)
-rd12 <- RDestimate(ayd0 ~ PAN_pct, cutpoint = 0.5, data = df)
-summary(rd12)
 
-rd13 <- RDestimate(ayd_diff1 ~ PAN_pct, cutpoint = 0.5, data = df)
-summary(rd13) #very small sample, so I don't really trust this
-
-pct_as1 <- rdrobust(y = df$ayd_diff1, x = df$PAN_pct, c = 0.5, bwselect = "mserd")
-summary(pct_as1)
-
-test <- subset(df, PAN_pct <= 0.5 + pct_as1$bws[1,1] & PAN_pct >= 0.5 - pct_as1$bws[1,1])
-rdplot(y = test$pa_diff1, x = test$PAN_pct, c = 0.5, p = 1)
-
-rd14 <- RDestimate(pa_diff2 ~ PAN_pct, cutpoint = 0.5, data = df)
-summary(rd14)
-
-pct_as2 <- rdrobust(y = df$pa_diff2, x = df$PAN_pct, c = 0.5, bwselect = "mserd")
-summary(pct_as2)
-
-rdplot(y = df$pa_diff2, x = df$PAN_pct, c = 0.5, p = 1)
-
-
-rd15 <- RDestimate(pa_diff3 ~ PAN_pct, cutpoint = 0.5, data = df)
-summary(rd15)
 

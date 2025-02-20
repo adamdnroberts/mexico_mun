@@ -76,8 +76,16 @@ df_1$main_estado <- as.factor(df_1$main_estado)
 df_1$ref_estado <- as.factor(df_1$ref_estado)
 
 #md_n <- RDestimate(change_pp_wt ~ PAN_pct, cutpoint = 0.5, data = df_n)
-one_ref <- rdrobust(y = df_1$ref_PAN_wins_t, x = df_1$PAN_pct, covs = cbind(df_1$main_year,df_1$ref_year,df_1$main_estado, df_1$ref_estado), p = 1, bwselect = "cerrd")
+one_ref <- rdrobust(y = df_1$change_pp, x = df_1$PAN_pct, covs = cbind(df_1$main_year,df_1$ref_year,df_1$main_estado, df_1$ref_estado), p = 1, bwselect = "cerrd")
 summary(one_ref)
+
+df_1_ext <- subset(df_1, ref_PAN_wins_t == 0)
+one_ref_ext <- rdrobust(y = df_1_ext$change_pp, x = df_1_ext$PAN_pct, covs = cbind(df_1_ext$main_year,df_1_ext$ref_year,df_1_ext$main_estado, df_1_ext$ref_estado), p = 1, bwselect = "mserd")
+summary(one_ref_ext)
+
+df_1_int <- subset(df_1, ref_PAN_wins_t == 1)
+one_ref_int <- rdrobust(y = df_1_int$change_pp, x = df_1_int$PAN_pct, covs = cbind(df_1_int$main_year,df_1_int$ref_year,df_1_int$main_estado, df_1_int$ref_estado), p = 1, bwselect = "mserd")
+summary(one_ref_int)
 
 rdr_bw <- rdbwselect(y = df_1$ref_PAN_wins_t, x = df_1$PAN_pct, bwselect = "cerrd")
 
@@ -227,3 +235,28 @@ ggplot(data = combined_df, aes(x = n, y = est, color = ci_type, fill = ci_type))
   labs(x = "Number of References in Average", y = "Estimate", title = "RD Estimates by number of references included") +
   theme_bw()
 
+df_n <- df_rdd_sorted %>%
+  group_by(mun_id) %>%
+  slice_head(n = 2) %>%
+  summarise(
+    PAN_pct = mean(PAN_pct, na.rm = TRUE),
+    weighted_avg_npp = sum(ref_next_PAN_pct * weight) / sum(weight),
+    weighted_avg_pp = sum(ref_PAN_pct * weight) / sum(weight),
+    mean_PAN_wins = mean(ref_PAN_wins)
+  )
+
+df_n <- df_n %>%
+  mutate(change_pp_wt = weighted_avg_npp - weighted_avg_pp)
+
+md_rdr <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 1, bwselect = "mserd")
+summary(md_rdr)
+
+df_n_ext <- subset(df_n, mean_PAN_wins == 0)
+
+md_rdr <- rdrobust(y = df_n_ext$change_pp_wt, x = df_n_ext$PAN_pct, p = 1, bwselect = "mserd")
+summary(md_rdr)
+
+df_n_int <- subset(df_n, mean_PAN_wins > 0)
+
+md_rdr <- rdrobust(y = df_n_int$change_pp_wt, x = df_n_int$PAN_pct, p = 1, bwselect = "mserd")
+summary(md_rdr)
