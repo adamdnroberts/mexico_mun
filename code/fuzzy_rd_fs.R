@@ -136,39 +136,213 @@ rdnew2 <- RDestimate(new2 ~ PAN_pct, cutpoint = 0.5, data = df)
 summary(rdnew2)
 
 #participaciones federales
+#create lag
+wide_budget_df <- wide_budget_df %>% arrange(year)
+
+wide_budget_df$pct_part <- wide_budget_df$Ingresos.Capítulo.Participaciones.federales/wide_budget_df$Ingresos.Tema.Total.de.ingresos
+
+bud_lead <- wide_budget_df %>%
+  group_by(mun_id) %>%
+  mutate(part_lead1 = lead(pct_part, n = 1), part_lead2 = lead(pct_part, n = 2), part_lead3 = lead(pct_part, n = 3)) %>%
+  ungroup()
+
+test <- subset(bud_lead, mun_id %in% sample(unique(df_lag$mun_id), 2))
+
+ggplot(data = test) +
+  geom_point(aes(x = year, y = pct_part)) +
+  geom_point(aes(x = year, y = part_lead1), color = "red") +
+  geom_point(aes(x = year, y = part_lead2), color = "blue") +
+  facet_wrap(~mun_id)
+
+#merge datasets
+df <- merge(big_df,bud_lead, by = c("mun_id", "year"))
+df <- subset(df, year <= 1997 & year >= 1995)
+
+DCdensity(df$PAN_pct, cutpoint = 0.5)
+  
 df$estado <- as.factor(df$estado)
 
-rd12 <- rdrobust(df$pct_part0, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd12 <- rdrobust(df$pct_part, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
 summary(rd12)
 
-rd13 <- rdrobust(df$pp_diff1, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd13 <- rdrobust(df$part_lead1, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
 summary(rd13)
 
-rd14 <- rdrobust(df$pp_diff2, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd14 <- rdrobust(df$part_lead2, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
 summary(rd14)
 
-rd15 <- rdrobust(df$pp_diff3, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd15 <- rdrobust(df$part_lead3, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
 summary(rd15)
+
+# Extract coefficients and confidence intervals
+coef_rd12 <- rd12$coef[3, 1]
+ci_rd12 <- rd12$ci[3, ]
+
+coef_rd13 <- rd13$coef[3, 1]
+ci_rd13 <- rd13$ci[3, ]
+
+coef_rd14 <- rd14$coef[3, 1]
+ci_rd14 <- rd14$ci[3, ]
+
+coef_rd15 <- rd15$coef[3, 1]
+ci_rd15 <- rd15$ci[3, ]
+
+# Create a dataframe to store the values
+results <- data.frame(
+  model = c("t", "t+1", "t+2", "t+3"),
+  coefficient = c(coef_rd12, coef_rd13, coef_rd14, coef_rd15),
+  ci_lower = c(ci_rd12[1], ci_rd13[1], ci_rd14[1], ci_rd15[1]),
+  ci_upper = c(ci_rd12[2], ci_rd13[2], ci_rd14[2], ci_rd15[2])
+)
+
+# Create the plot using ggplot2
+fed_part <- ggplot(results, aes(x = model, y = coefficient)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
+  labs(title = "RD Estimates", subtitle = "DV: % income from federal participaciones",
+       x = "Model",
+       y = "RD Coef") +
+  theme_minimal()
+
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Third Year Paper Results Outline/images/part_all_federal.png", plot = fed_part, width = 6, height = 4)
+
 
 #participaciones diversas
-lags <- 1:3
+#create lag
+wide_budget_df <- wide_budget_df %>% arrange(year)
 
-# Order the dataframe ing by year
-df <- df %>% arrange(year)
+wide_budget_df$pct_part <- wide_budget_df$Ingresos.Partida.Genérica.Participaciones.diversas/wide_budget_df$Ingresos.Tema.Total.de.ingresos
 
-setDT(df)[, paste0("diversas", lags) := lapply(lags, function(x) shift(Ingresos.Partida.Genérica.Participaciones.diversas, x, fill = NA, type = "lead")), by = mun_id]
+bud_lead <- wide_budget_df %>%
+  group_by(mun_id) %>%
+  mutate(part_lead1 = lead(pct_part, n = 1), part_lead2 = lead(pct_part, n = 2), part_lead3 = lead(pct_part, n = 3)) %>%
+  ungroup()
 
-rd12 <- rdrobust(log(df$Ingresos.Partida.Genérica.Participaciones.diversas), df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+test <- subset(bud_lead, mun_id %in% sample(unique(df_lag$mun_id), 2))
+
+ggplot(data = test) +
+  geom_point(aes(x = year, y = pct_part)) +
+  geom_point(aes(x = year, y = part_lead1), color = "red") +
+  geom_point(aes(x = year, y = part_lead2), color = "blue") +
+  facet_wrap(~mun_id)
+
+#merge datasets
+df <- merge(big_df,bud_lead, by = c("mun_id", "year"))
+df <- subset(df, year <= 1997 & year >= 1995)
+
+DCdensity(df$PAN_pct, cutpoint = 0.5)
+
+df$estado <- as.factor(df$estado)
+
+rd12 <- rdrobust(df$pct_part, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
 summary(rd12)
 
-rd13 <- rdrobust(df$diversas1, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd13 <- rdrobust(df$part_lead1, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
 summary(rd13)
 
-rd14 <- rdrobust(df$diversas2, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd14 <- rdrobust(df$part_lead2, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
 summary(rd14)
 
-rd15 <- rdrobust(df$diversas3, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd15 <- rdrobust(df$part_lead3, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
 summary(rd15)
 
+# Extract coefficients and confidence intervals
+coef_rd12 <- rd12$coef[3, 1]
+ci_rd12 <- rd12$ci[3, ]
 
+coef_rd13 <- rd13$coef[3, 1]
+ci_rd13 <- rd13$ci[3, ]
 
+coef_rd14 <- rd14$coef[3, 1]
+ci_rd14 <- rd14$ci[3, ]
+
+coef_rd15 <- rd15$coef[3, 1]
+ci_rd15 <- rd15$ci[3, ]
+
+# Create a dataframe to store the values
+results <- data.frame(
+  model = c("t", "t+1", "t+2", "t+3"),
+  coefficient = c(coef_rd12, coef_rd13, coef_rd14, coef_rd15),
+  ci_lower = c(ci_rd12[1], ci_rd13[1], ci_rd14[1], ci_rd15[1]),
+  ci_upper = c(ci_rd12[2], ci_rd13[2], ci_rd14[2], ci_rd15[2])
+)
+
+# Create the plot using ggplot2
+diversas <- ggplot(results, aes(x = model, y = coefficient)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
+  labs(title = "RD Estimates", subtitle = "DV: % income from diverse participaciones",
+       x = "Model",
+       y = "RD Coef") +
+  theme_minimal()
+
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Third Year Paper Results Outline/images/part_diversas.png", plot = diversas, width = 6, height = 4)
+
+#aportaciones ramo 33
+#create lag
+wide_budget_df <- wide_budget_df %>% arrange(year)
+
+wide_budget_df$pct_part <- wide_budget_df$Ingresos.Concepto.Aportaciones.del.ramo.general.33/wide_budget_df$Ingresos.Tema.Total.de.ingresos
+
+bud_lead <- wide_budget_df %>%
+  group_by(mun_id) %>%
+  mutate(part_lead1 = lead(pct_part, n = 1), part_lead2 = lead(pct_part, n = 2), part_lead3 = lead(pct_part, n = 3)) %>%
+  ungroup()
+
+test <- subset(bud_lead, mun_id %in% sample(unique(df_lag$mun_id), 2))
+
+ggplot(data = test) +
+  geom_point(aes(x = year, y = pct_part)) +
+  geom_point(aes(x = year, y = part_lead1), color = "red") +
+  geom_point(aes(x = year, y = part_lead2), color = "blue") +
+  facet_wrap(~mun_id)
+
+#merge datasets
+df <- merge(big_df,bud_lead, by = c("mun_id", "year"))
+df <- subset(df, year <= 1997 & year >= 1995)
+
+DCdensity(df$PAN_pct, cutpoint = 0.5)
+
+df$estado <- as.factor(df$estado)
+
+rd12 <- rdrobust(df$pct_part, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+summary(rd12)
+
+rd13 <- rdrobust(df$part_lead1, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+summary(rd13)
+
+rd14 <- rdrobust(df$part_lead2, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+summary(rd14)
+
+rd15 <- rdrobust(df$part_lead3, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+summary(rd15)
+
+# Extract coefficients and confidence intervals
+coef_rd12 <- rd12$coef[3, 1]
+ci_rd12 <- rd12$ci[3, ]
+
+coef_rd13 <- rd13$coef[3, 1]
+ci_rd13 <- rd13$ci[3, ]
+
+coef_rd14 <- rd14$coef[3, 1]
+ci_rd14 <- rd14$ci[3, ]
+
+coef_rd15 <- rd15$coef[3, 1]
+ci_rd15 <- rd15$ci[3, ]
+
+# Create a dataframe to store the values
+results <- data.frame(
+  model = c("rd12", "rd13", "rd14", "rd15"),
+  coefficient = c(coef_rd12, coef_rd13, coef_rd14, coef_rd15),
+  ci_lower = c(ci_rd12[1], ci_rd13[1], ci_rd14[1], ci_rd15[1]),
+  ci_upper = c(ci_rd12[2], ci_rd13[2], ci_rd14[2], ci_rd15[2])
+)
+
+# Create the plot using ggplot2
+ggplot(results, aes(x = model, y = coefficient)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
+  labs(title = "Coefficients and Confidence Intervals of Models",
+       x = "Model",
+       y = "Coefficient") +
+  theme_minimal()
