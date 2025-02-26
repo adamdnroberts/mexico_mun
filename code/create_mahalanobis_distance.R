@@ -56,17 +56,20 @@ merge2 <- merge(merge1, budget, by = "mun_id")
 merge3 <- merge(merge2, size, by = "mun_id")
 merge4 <- merge(merge3,dist, by = "mun_id")
 merge5 <- merge(merge4, fed_elec_w_key, by = "mun_id")
-mah_dist <- merge(merge5, rural, by = "mun_id")
+mah_dist_full <- merge(merge5, rural, by = "mun_id")
 
 PAN_governors <- sprintf("%02d", c(2,8,11,14))
-mah_dist$gov <- ifelse(mah_dist$estado %in% PAN_governors, 1, 0)
+mah_dist_full$gov <- ifelse(mah_dist_full$estado %in% PAN_governors, 1, 0)
+mah_dist_full$transfers_pct <- mah_dist_full$transfers/mah_dist_full$income
 
-mah_dist <- subset(mah_dist, select = c(mun_id, prev_PAN_pct, pop, income, 
-                                        #transfers, 
+mah_dist <- subset(mah_dist_full, select = c(mun_id, prev_PAN_pct, pop, income,
+                                        transfers_pct, 
                                         LAT_DECIMAL, LON_DECIMAL, 
-                                        #depMR_PAN_pct, depPR_PAN_pct, senate_PAN_pct, pres_PAN_pct, 
-                                        pop_rural
-                                        #, gov
+                                        #depMR_PAN_pct, 
+                                        depPR_PAN_pct, 
+                                        #senate_PAN_pct, pres_PAN_pct, 
+                                        pop_rural,
+                                        gov
                                         ))
 
 #options(scipen = 999)
@@ -96,12 +99,27 @@ colnames(temp_matrix) <- columns
 
 md_mat <- as.data.frame(temp_matrix)
 
+just_muns(municipio = "21114") #Puebla
+just_muns(municipio = "19039") #Monterrey
+just_muns(municipio = "14039") #Guadalajara
 
-# Find the row index where md_01001 equals 2.264644
-row_index <- which(md_mat$md_01001 == min(md_mat$md_01001[md_mat$md_01001 != 0]))
-
-# Print the row
-rownames(md_mat)[row_index]
+#function
+just_muns <- function(municipio, full = FALSE, full_country = FALSE) {
+  if (full_country == F & full == T) {
+    estado <- substr(municipio, 1, 2)
+    adj_plot <- subset(mex_sf, CVE_ENT == estado)
+    adj_list <- st_intersects(adj_plot, adj_plot, sparse = T)
+  }
+  else {adj_plot <- mex_sf}
+  
+  adj_plot$neighbors <- NA
+  mun_vec <- md_mat[,mah_dist$mun_id == municipio]
+  muns <- mah_dist$mun_id[mun_vec <= sort(mun_vec)[6]]
+  adj_plot$neighbors[adj_plot$mun_id %in% muns] <- "neighbor"
+  adj_plot$neighbors[adj_plot$mun_id == municipio] <- "municipality"
+  
+  print(muns)
+}
 
 #data viz
 create_plot_adj <- function(municipio, full = FALSE, full_country = FALSE) {
@@ -143,18 +161,18 @@ create_plot_adj <- function(municipio, full = FALSE, full_country = FALSE) {
 
 #Densely populated
 #create_plot_adj(municipio = "09007") #CDMX don't have in dataset
-# create_plot_adj(municipio = "21114") #Puebla
-# create_plot_adj(municipio = "19039") #Monterrey
-# create_plot_adj(municipio = "14039") #Guadalajara
-# 
-# #median populations
-# create_plot_adj(municipio = "08021")
-# 
-# #sparsely populated
-# create_plot_adj(municipio = "14011") #potentially problematic? Atengo, Jalisco
-# 
-# #check distances for sparsely populated
-# refs <- c("08002", "08016", "08021", "08045", "08054", "08062")
+create_plot_adj(municipio = "21114") #Puebla
+create_plot_adj(municipio = "19039") #Monterrey
+create_plot_adj(municipio = "14039") #Guadalajara
+#
+#median populations
+create_plot_adj(municipio = "08021")
+
+#sparsely populated
+create_plot_adj(municipio = "14011") #potentially problematic? Atengo, Jalisco
+
+#check distances for sparsely populated
+refs <- c("08002", "08016", "08021", "08045", "08054", "08062")
 
 
 # geo_dist <- function(municipio) {
@@ -173,6 +191,9 @@ create_plot_adj <- function(municipio, full = FALSE, full_country = FALSE) {
 # geo_dist("08021")
 # geo_dist("14011")
 
+#try not normalized data
+
+
 #normalizing weights
 md_raw_wt <- 1/md_mat
 md_raw_wt[md_raw_wt == Inf | md_raw_wt == -Inf] <- 0
@@ -184,7 +205,7 @@ summary(maxes)
 
 max_value <- max(md_norm) # Find the maximum value in the entire matrix 
 row_index <- which(apply(md_norm, 1, function(x) max_value %in% x))
-row.names(md_norm)[152]
+#row.names(md_norm)[152]
 
 md_norm <- as.data.frame(md_norm)
 md_norm$mun_id <- rownames(md_norm)
