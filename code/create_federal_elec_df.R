@@ -1,6 +1,7 @@
 library(ggplot2)
 library(dplyr)
 library(sf)
+library(readxl)
 
 mex94_depPR <- read.csv("~/mexico_mun/data/mex94_drp.csv")
 mex94_depPR <- mex94_depPR %>% 
@@ -109,12 +110,32 @@ check2 <- as.data.frame(cbind(check$Municipio,check$NOM_MUN_up))
 
 
 ac <- subset(fed_elec, Estado == 1)
-new_ac <- subset(new, CVE_ENT == 1)
+new_ac <- subset(new, Estado == 1)
 test <- ac %>%
   left_join(new_ac, by = c("Estado", "mun"))
 test$NOM_MUN_up <- toupper(iconv(test$NOM_MUN, from = "UTF-8", to = "ASCII//TRANSLIT"))
 
-check2 <- as.data.frame(cbind(test$Municipio,test$NOM_MUN_up))
+check2 <- as.data.frame(cbind(test$Municipio,test$NOM_MUN_up,test$NOM_MUN))
 
 
 save(fed_elec, file = "C:/Users/adamd/Documents/mexico_mun/data/federal_elections.Rdata")
+
+mun_catalog <- read_excel("C:/Users/adamd/Downloads/MUNICIPIOS_202408.xlsx")
+
+# Convert to ASCII
+mun_catalog$Municipio <- iconv(mun_catalog$MUNICIPIO, from = "UTF-8", to = "ASCII//TRANSLIT")
+mun_catalog$Estado <- as.numeric(mun_catalog$EFE_KEY)
+
+fed_elec_new <- fed_elec
+fed_elec_new$Municipio <- iconv(fed_elec_new$Municipio, from = "UTF-8", to = "ASCII//TRANSLIT")
+
+fed_elec_w_key <- fed_elec_new %>%
+  left_join(mun_catalog, by = c("Estado", "Municipio"))
+
+#test$mun_key <- as.numeric(test$CATALOG_KEY)
+
+#new_test <- subset(test, is.na(mun_key))
+
+fed_elec_w_key$mun_id <- paste0(fed_elec_w_key$EFE_KEY,fed_elec_w_key$CATALOG_KEY)
+
+save(fed_elec_w_key, file = "C:/Users/adamd/Documents/mexico_mun/data/federal_elections_w_key.Rdata")
