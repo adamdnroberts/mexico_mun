@@ -67,7 +67,8 @@ mah_dist <- subset(mah_dist_full, select = c(mun_id, prev_PAN_pct, pop, income,
                                         LAT_DECIMAL, LON_DECIMAL, 
                                         #depMR_PAN_pct, 
                                         depPR_PAN_pct, 
-                                        #senate_PAN_pct, pres_PAN_pct, 
+                                        #senate_PAN_pct, 
+                                        pres_PAN_pct, 
                                         pop_rural,
                                         gov
                                         ))
@@ -162,8 +163,10 @@ create_plot_adj <- function(municipio, full = FALSE, full_country = FALSE) {
 #Densely populated
 #create_plot_adj(municipio = "09007") #CDMX don't have in dataset
 create_plot_adj(municipio = "21114") #Puebla
-create_plot_adj(municipio = "19039") #Monterrey
+plot <- create_plot_adj(municipio = "19039") #Monterrey
 create_plot_adj(municipio = "14039") #Guadalajara
+
+
 #
 #median populations
 create_plot_adj(municipio = "08021")
