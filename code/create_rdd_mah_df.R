@@ -4,7 +4,6 @@ load("~/mexico_mun/data/md_normalized.Rdata")
 
 load("~/mexico_mun/data/full_dataset_mexelec.Rdata")
 big_df$mun_id <- gsub(" ", "", big_df$Municipio)
-big_df$PAN_pct <- big_df$PAN_pct - 0.5
 
 df <- subset(big_df, year>= 1995 & year <= 1997 
              #& estado!="Tlaxcala" 

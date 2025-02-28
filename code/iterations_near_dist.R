@@ -13,6 +13,8 @@ df_rdd$ref_PAN_wins_t <- ifelse(df_rdd$ref_PAN_pct > 0, 1, 0)
 df_rdd_sorted <- df_rdd %>%
   arrange(mun_id, dH)
 
+df_rdd_sorted <- subset(df_rdd_sorted, main_estado == ref_estado & ref_PAN_wins_t == 0)
+
 # Pre-allocate the result matrix
 robust_est <- matrix(NA, nrow = 100, ncol = 7)
 cer_est <- matrix(NA, nrow = 100, ncol = 7)

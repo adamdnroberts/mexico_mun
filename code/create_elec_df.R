@@ -8,7 +8,7 @@ setwd("~/mexico_mun/raw")
 
 ##LOOPS##
 
-source("~/mexico_mun/code/process_df.R")
+source("~/mexico_mun/code/process_elec_df.R")
 
 estados <- c("Aguascalientes","Baja California Sur","Baja California","Campeche","Chiapas","Chihuahua","Coahuila","Colima","Distrito Federal","Durango","Guanajuato","Guerrero","Hidalgo","Jalisco","Mexico","Michoacan","Morelos","Nayarit","Nuevo Leon","Oaxaca","Puebla","Queretaro","Quintana Roo","San Luis Potos","Sinaloa","Sonora","Tabasco","Tamaulipas","Tlaxcala","Veracruz","Yucatan","Zacatecas")
 
@@ -35,4 +35,4 @@ big_df <- big_df %>% select(-PSN...184, -PSN...185, -PSN...186)
 
 big_df$mun_id <- gsub(" ", "", big_df$Municipio)
 
-save(big_df, file = "~/mexico_RD/full_dataset_mexelec.Rdata")
+save(big_df, file = "~/mexico_mun/data/full_dataset_mexelec.Rdata")
