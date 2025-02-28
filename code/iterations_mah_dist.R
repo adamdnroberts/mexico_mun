@@ -7,18 +7,13 @@ library(RDHonest)
 
 load("~/mexico_mun/data/rdd_mah_dist.Rdata")
 
+df_rdd$ref_PAN_wins_t <- ifelse(df_rdd$ref_PAN_pct > 0, 1, 0)
+
 # First, sort by mun_id and then by mah_d
 df_rdd_sorted <- df_rdd %>%
   arrange(mun_id, desc(mah_d))
 
-#RD Plot for only 1 reference
-df_1 <- df_rdd_sorted %>%
-  group_by(mun_id) %>%
-  slice_head(n = 1)
-
-#unique(df_1$ref_mun_id)
-
-df_rdd$ref_PAN_wins_t <- ifelse(df_rdd$ref_PAN_pct > 0, 1, 0)
+df_rdd_sorted <- subset(df_rdd_sorted, main_estado == ref_estado & ref_PAN_wins_t == 0)
 
 # Pre-allocate the result matrix
 robust_est <- matrix(NA, nrow = 100, ncol = 7)
@@ -38,7 +33,8 @@ for (n in n_values) {
       weighted_avg_npp = sum(ref_next_PAN_pct * mah_d) / sum(mah_d),
       weighted_avg_pp = sum(ref_PAN_pct * mah_d) / sum(mah_d),
       main_estado = as.factor(first(main_estado)),
-      main_year = as.factor(first(main_year))
+      main_year = as.factor(first(main_year)),
+      mah_d = mean(mah_d)
     )
   
   df_n <- df_n %>%
@@ -65,6 +61,7 @@ p <- ggplot(subset(plot_data, bw_type == "MSE"), aes(x = n, y = est
                            , color = bw_type
             )) +
   geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2, position = position_dodge(width = -0.5)) +
+  geom_errorbar(aes(ymin = ci90low, ymax = ci90high), width = 0.2, position = position_dodge(width = -0.5), color = "blue") +
   geom_point(position = position_dodge(width = -0.5)) +
   labs(x = "Number of References in Weighted Average", y = "RD Estimate", title = "RD Estimates by number of references included"
        , subtitle = "Controlling for matching distance, state and year fe"
@@ -104,4 +101,6 @@ png(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Third Year Paper Results Ou
 rdplot(y = df_2$change_pp_wt, x = df_2$PAN_pct, h = m2$bws[1], p = 1, subset = abs(df_2$PAN_pct) < m2$bws[1],
        title = "RD for 2 nearest municipalities", x.label = "PAN Vote Share, t", y.label = "Nearest Municipalitiy PAN vote share, t+1")
 dev.off()
+
+test <- subset(df_2, abs(df_2$PAN_pct) < m2$bws[1]/25)
 
