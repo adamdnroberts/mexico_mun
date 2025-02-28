@@ -1,70 +1,43 @@
+library(dplyr)
+library(GGally)
+
 load("~/mexico_mun/data/rdd_mah_dist.Rdata")
 
-mah_dist <- subset(mah_dist_full, select = c(mun_id, prev_PAN_pct, pop, income,
-                                             transfers_pct, 
-                                             LAT_DECIMAL, LON_DECIMAL, 
-                                             depMR_PAN_pct, 
-                                             depPR_PAN_pct, 
-                                             senate_PAN_pct, 
-                                             pres_PAN_pct, 
-                                             pop_rural,
-                                             gov
-))
+ref1 <- subset(df_rdd, mun_id == "19009" & main_estado == ref_estado & ref_PAN_wins == 0 & ref_next_PAN_pct > -0.5)
 
-#options(scipen = 999)
-mah_dist <- na.omit(mah_dist)
-S <- var(mah_dist[, 2:ncol(mah_dist)])
+ref1_sorted <- ref1 %>%
+  arrange(mun_id, desc(mah_d))
 
-mat <- as.matrix(mah_dist[, 2:ncol(mah_dist)])
-qr(mat)$rank # no linear dependence
+df1 <- ref1_sorted %>%
+  group_by(mun_id) %>%
+  slice_head(n = 5)
 
-# Calculating Mahalanobis distance
-n <- nrow(mat)
-temp_matrix <- matrix(NA, n, n)
+refs <- unique(df1$ref_mun_id)
 
-# Start time
-start_time <- Sys.time()
-for (i in 1:n) {
-  temp_matrix[, i] <- mahalanobis(mat, mat[i, ], cov = S, tol = 1e-50)
-}
-stop_time <- Sys.time()
-print(stop_time - start_time)
+test <- subset(mah_dist_full, mun_id %in% refs)
 
-row.names(temp_matrix) <- mah_dist$mun_id
+ref1_values <- subset(mah_dist_full, mun_id == "19009")
 
-# Adding "md" in front of each element
-columns <- paste0("md_", mah_dist$mun_id)
-colnames(temp_matrix) <- columns
+# List of variables to calculate the difference for
+variables <- c("prev_PAN_pct", "pop", 
+               #"income", 
+               "LAT_DECIMAL", "LON_DECIMAL", 
+               #"depMR_PAN_pct", "depPR_PAN_pct", "senate_PAN_pct", 
+               #"pres_PAN_pct",
+               #"transfers_pct",
+               "pop_rural"
+               )
 
-md_mat <- as.data.frame(temp_matrix)
+# Initialize an empty data frame to store the differences
+diff_data <- data.frame(matrix(ncol = length(variables), nrow = nrow(test)))
+colnames(diff_data) <- paste0(variables, "_diff")
 
-source("~/mexico_mun/code/process_elec_df.R")
-
-#function
-just_muns <- function(municipio, full = FALSE, full_country = FALSE) {
-  if (full_country == F & full == T) {
-    estado <- substr(municipio, 1, 2)
-    adj_plot <- subset(mex_sf, CVE_ENT == estado)
-    adj_list <- st_intersects(adj_plot, adj_plot, sparse = T)
-  }
-  else {adj_plot <- mex_sf}
-  
-  adj_plot$neighbors <- NA
-  mun_vec <- md_mat[,mah_dist$mun_id == municipio]
-  muns <- mah_dist$mun_id[mun_vec <= sort(mun_vec)[6]]
-  adj_plot$neighbors[adj_plot$mun_id %in% muns] <- "neighbor"
-  adj_plot$neighbors[adj_plot$mun_id == municipio] <- "municipality"
-  
-  print(muns)
+#diff_data$mun_id <- test$mun_id
+# Perform the difference calculation for each variable and add to the new data frame
+for (var in variables) {
+  diff_col_name <- paste0(var, "_diff")
+  diff_data[[diff_col_name]] <- test[[var]] - ref1_values[[var]][1]
 }
 
-#test muns
-just_muns(municipio = "24047")
-just_muns(municipio = "19009")
-
-
-
-#Big cities
-just_muns(municipio = "21114") #Puebla
-just_muns(municipio = "19039") #Monterrey
-just_muns(municipio = "14039") #Guadalajara
+# Print the new data frame with the differences
+ggpairs(diff_data)

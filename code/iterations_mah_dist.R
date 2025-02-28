@@ -13,7 +13,9 @@ df_rdd$ref_PAN_wins_t <- ifelse(df_rdd$ref_PAN_pct > 0, 1, 0)
 df_rdd_sorted <- df_rdd %>%
   arrange(mun_id, desc(mah_d))
 
-df_rdd_sorted <- subset(df_rdd_sorted, main_estado == ref_estado & ref_PAN_wins_t == 0)
+df_rdd_sorted <- subset(df_rdd_sorted, 
+                        main_estado == ref_estado & 
+                          ref_PAN_wins == 0 & ref_next_PAN_pct > -0.5)
 
 # Pre-allocate the result matrix
 robust_est <- matrix(NA, nrow = 100, ncol = 7)
@@ -61,7 +63,7 @@ p <- ggplot(subset(plot_data, bw_type == "MSE"), aes(x = n, y = est
                            , color = bw_type
             )) +
   geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2, position = position_dodge(width = -0.5)) +
-  geom_errorbar(aes(ymin = ci90low, ymax = ci90high), width = 0.2, position = position_dodge(width = -0.5), color = "blue") +
+  #geom_errorbar(aes(ymin = ci90low, ymax = ci90high), width = 0.2, position = position_dodge(width = -0.5), color = "blue") +
   geom_point(position = position_dodge(width = -0.5)) +
   labs(x = "Number of References in Weighted Average", y = "RD Estimate", title = "RD Estimates by number of references included"
        , subtitle = "Controlling for matching distance, state and year fe"
@@ -93,12 +95,12 @@ m2 <- rdrobust(y = df_2$change_pp_wt, x = df_2$PAN_pct, covs = cbind(df_2$mah_d,
 summary(m2)
 
 png(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Third Year Paper Results Outline/images/mah_rdplot_nearest2.png", width = 6, height = 4, units = "in", res = 300)
-rdplot(y = df_2$change_pp_wt, x = df_2$PAN_pct,
+rdplot(y = df_n$change_pp_wt, x = df_n$PAN_pct,
        title = "RD for 2 nearest municipalities", x.label = "PAN Vote Share, t", y.label = "Nearest Municipalitiy PAN vote share, t+1")
 dev.off()
 
 png(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Third Year Paper Results Outline/images/mah_rdplot_nearest2_small_bw.png", width = 6, height = 4, units = "in", res = 300)
-rdplot(y = df_2$change_pp_wt, x = df_2$PAN_pct, h = m2$bws[1], p = 1, subset = abs(df_2$PAN_pct) < m2$bws[1],
+rdplot(y = df_n$change_pp_wt, x = df_n$PAN_pct, h = md_rdr$bws[1], p = 1, subset = abs(df_n$PAN_pct) < md_rdr$bws[1],
        title = "RD for 2 nearest municipalities", x.label = "PAN Vote Share, t", y.label = "Nearest Municipalitiy PAN vote share, t+1")
 dev.off()
 

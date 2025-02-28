@@ -1,11 +1,12 @@
 load("~/mexico_mun/data/mah_dist_full.Rdata")
 
-mah_dist <- subset(mah_dist_full, select = c(mun_id, prev_PAN_pct, pop, income,
+mah_dist <- subset(mah_dist_full, select = c(mun_id, prev_PAN_pct, pop, 
+                                             income,
                                              transfers_pct, 
-                                             LAT_DECIMAL, LON_DECIMAL, 
-                                             depMR_PAN_pct, 
-                                             depPR_PAN_pct, 
-                                             senate_PAN_pct, 
+                                             LAT_DECIMAL, LON_DECIMAL,
+                                             #depMR_PAN_pct, 
+                                             #depPR_PAN_pct, 
+                                             #senate_PAN_pct, 
                                              pres_PAN_pct, 
                                              pop_rural,
                                              gov
