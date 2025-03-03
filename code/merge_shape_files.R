@@ -8,7 +8,7 @@ library(rdd)
 library(rddtools) #for balance of covariates testing
 
 #get neighboring/adjacent municipalities list
-mex_sf <- read_sf("~/mexico_RD/mun1995shp/Municipios_1995.shp")  # Read the shapefile
+mex_sf <- read_sf("~/mexico_mun/raw/mun1995shp/Municipios_1995.shp")  # Read the shapefile
 mex_sf$mun_id <- paste0(mex_sf$CVE_ENT, mex_sf$CVE_MUN)  # Create a unique ID for each municipality
 
 adj_list <- st_intersects(mex_sf, mex_sf, sparse = T)  # Find intersecting (neighboring) municipalities
@@ -25,110 +25,99 @@ merge_neighbors2 <- merge(ids, merge_neighbors, by.x = "df_id", by.y = "col.id")
 #load elections data
 load("~/mexico_RD/full_dataset_mexelec.Rdata")
 
-df <- subset(big_df, year>=1994 & year <= 1999 & estado!="Tlaxcala" & (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PAN" | p2_name == "PAN"))
-df$mun_id <- gsub(" ", "", df$Municipio)
-
-length(unique(df$mun_id))
-
-#figure out missing municipalities
-shape_muns <- unique(merge_neighbors2$mun_id.x)
-elec_muns <- unique(df$mun_id)
-
-missing_muns1 <- setdiff(shape_muns,elec_muns)
-missing_muns2 <- setdiff(elec_muns,shape_muns)
-
 big_df$mun_id <- gsub(" ", "", big_df$Municipio)
-full_elec_muns <- unique(big_df$mun_id)
-missing_muns3 <- setdiff(full_elec_muns,shape_muns)
-missing_muns4 <- setdiff(shape_muns,full_elec_muns)
 
+df <- subset(big_df, year>= 1995 & year <= 1997 
+             #& estado!="Tlaxcala" 
+             & (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PAN" | p2_name == "PAN")
+)
+#df$mun_id <- gsub(" ", "", df$Municipio)
+df$PRD_pct <- df$PRD / (df$p1 + df$p2) # PRD percentage compared to top two
+df$PRD_treat <- ifelse(df$PRD_pct > 0.5, 1, 0)
 
-#why missing from shape file?
-test <- subset(df, mun_id %in% missing_muns2)
-summary(test$PAN_pct) #all NAs, so we're good
-
-#why missing from CIDAC?
-mex_sf$missing <- as.factor(ifelse(mex_sf$mun_id %in% missing_muns1,1,0))
-
-ggplot(mex_sf) +
-  geom_sf(color = "black", aes(geometry = geometry, fill=missing)) +
-  theme_void()
-
-
-
-# unique_pairs <- df %>%
-#   distinct(year, mun_id)
+df_ref <- subset(big_df, year>= 1995 & year <= 1997 
+                 #& estado!="Tlaxcala" 
+                 #& (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PAN" | p2_name == "PAN")
+)
 
 #create smaller datasets for merge
-neighbors_PAN <- subset(df, select = c(year, mun_id, next_PAN_pct, PAN_pct, estado))
+ref_PAN <- subset(df_ref, select = c(year, mun_id, next_PAN_pct, PAN_pct, estado))
 main_mun_PAN <- subset(df, select = c(year, mun_id, PAN_pct, estado))
 
 #merge datasets using adjacent municipalities index
-neighbors2 <- merge(merge_neighbors2,neighbors_PAN, by.x = c("mun_id.y"), by.y = c("mun_id"))
-neighbors2 <- neighbors2 %>% rename(vec_id = mun_id.y, vec_PAN_pct = PAN_pct)
+ref2 <- merge(merge_neighbors2,ref_PAN, by.x = "mun_id.y", by.y = "mun_id")
+ref2 <- ref2 %>% rename(ref_PAN_pct = PAN_pct, ref_next_PAN_pct = next_PAN_pct, ref_estado = estado, ref_year = year, ref_mun_id = mun_id.y, mun_id = mun_id.x)
+ref2$ref_PAN_wins <- ifelse(ref2$ref_PAN_pct > 0, 1, 0)
 
-df_rdd <- merge(main_mun_PAN,neighbors2, by.x = c("mun_id"), by.y = c("mun_id.x"))
+df_rdd <- merge(main_mun_PAN,ref2, by = "mun_id")
 df_rdd <- df_rdd %>% 
-  rename(main_year = year.x, vec_year = year.y) %>% 
-  select(-df_id, -df_id.y)
+  rename(main_year = year, main_estado = estado)
 
-#average vecino, adjacent neighbors
-adj <- df_rdd %>% 
+df_rdd$change <- df_rdd$ref_next_PAN_pct - df_rdd$ref_PAN_pct
+df_rdd$mun_id_factor <- as.factor(df_rdd$mun_id)
+df_rdd$main_year_factor <- as.factor(df_rdd$main_year)
+df_rdd$main_estado_factor <- as.factor(df_rdd$main_estado)
+df_rdd$ref_year_factor <- as.factor(df_rdd$ref_year)
+df_rdd$ref_estado_factor <- as.factor(df_rdd$ref_estado)
+
+md_rdr <- rdrobust(y = df_rdd$change, x = df_rdd$PAN_pct, covs = cbind(df_rdd$mun_id_factor, df_rdd$main_year_factor, df_rdd$main_estado_factor, df_rdd$ref_year_factor, df_rdd$ref_estado_factor), p = 1)
+summary(md_rdr)
+
+df_rdd$weight <- 1
+
+df_rdd_avg <- df_rdd %>%
   group_by(mun_id) %>%
-  summarise(PAN_pct = first(PAN_pct), vec_npp = mean(next_PAN_pct, na.rm = T), main_year = first(main_year), main_estado = first(estado.x), vec_pp = mean(vec_PAN_pct, na.rm = T))
+  summarise(
+  PAN_pct = mean(PAN_pct, na.rm = TRUE),
+  weighted_avg_npp = sum(ref_next_PAN_pct * weight) / sum(weight),
+  weighted_avg_pp = sum(ref_PAN_pct * weight) / sum(weight),
+  main_estado = as.factor(first(main_estado)),
+  main_year = as.factor(first(main_year)),
+  )
   
-DCdensity(adj$PAN_pct, cutpoint = 0.5)
-abline(v = 0.5, col = "red", lwd = 2)
-title(x = "PAN vote share")
+df_rdd_avg <- df_rdd_avg %>%
+    mutate(change_pp_wt = weighted_avg_npp - weighted_avg_pp)
+  
+md_rdr <- rdrobust(y = df_rdd_avg$change_pp_wt, x = df_rdd_avg$PAN_pct, p = 1)
+summary(md_rdr)
 
-rd1 <- RDestimate(vec_npp ~ PAN_pct, cutpoint = 0.5, data = adj)
-summary(rd1)
+# Define the function
+format_model_table <- function(model) {
+  
+  # Extract the model name from the model object
+  model_name <- deparse(substitute(model))
+  
+  # Get the second character from the model name
+  second_char <- substr(model_name, 2, 2)
+  
+  # Extract the necessary values from the model object
+  coef <- round(model$coef[3],3)
+  se <- round(model$se[3], 3)
+  N_left <- model$N[1]
+  N_right <- model$N[2]
+  eff_N_left <- model$N_h[1]
+  eff_N_right <- model$N_h[2]
+  
+  # Create a data frame with the specified values
+  model_table <- data.frame(
+    #No.Refs = substr(model_name, 2, 2),
+    #No.PAN.refs = substr(model_name, 4, 4),
+    Coef. = coef,
+    SE = se,
+    `N.left` = N_left,
+    `N.Right` = N_right,
+    `Eff.N.Left` = eff_N_left,
+    `Eff.N.Right` = eff_N_right
+  )
+  
+  # Return the formatted table
+  return(model_table)
+}
 
-lm <- lm(vec_npp ~ PAN_pct + vec_pp + main_estado + main_year, data = adj)
-summary(lm)
+# Call the function with the model object
+model_table <- rbind(format_model_table(md_rdr))
+print(model_table)
 
-#probably good that this doesn't show an effect?
-ggplot(adj, aes(x = PAN_pct, y = vec_npp)) +
-  geom_point(alpha = 0.5) +
-  #geom_smooth() +
-  labs(title = "Regression Discontinuity Design",
-       x = "PAN vote share, t",
-       y = "Neighbors Average PAN vote share, t+1") +
-  theme_minimal()
-
-#closest election only, for those with zero or 1 PAN wins, effect of extensive margin
-
-# Filter groups with at most one value of PAN_pct > 0.5, then keep only largest value
-ext_margin <- df_rdd %>%
-  group_by(vec_id) %>%
-  filter(sum(PAN_pct > 0.5) <= 1) %>%
-  slice(which.max(PAN_pct)) %>%
-  ungroup()
-
-DCdensity(ext_margin$PAN_pct, cutpoint = 0.5)
-title(x = "PAN vote share")
-
-rd1_ext <- RDestimate(next_PAN_pct ~ PAN_pct, cutpoint = 0.5, data = ext_margin)
-summary(rd1_ext)
-
-plot(rd1_ext, gran = 400, range = c(0.45,0.55))
-abline(v = 0.5, col = "black", lwd = 2, lty = "solid")
-title(x = "neighbor PAN vote share, t", y = "PAN vote share, t+1")
-
-#closest election only, effect of having an additional PAN win
-df_only_closest <- df_rdd %>%
-  group_by(vec_id) %>%
-  slice(which.min(abs(PAN_pct - 0.5)))
-
-DCdensity(df_only_closest$PAN_pct, cutpoint = 0.5)
-title(x = "PAN vote share")
-
-rd1 <- RDestimate(next_PAN_pct ~ PAN_pct, cutpoint = 0.5, data = df_only_closest)
-summary(rd1)
-
-plot(rd1, gran = 20, range = c(0.40,0.6)) #this plot does not show the effect estimated from RDestimate
-abline(v = 0.5, col = "grey", lwd = 2, lty = "dashed")
-title(x = "neighbor PAN vote share, t", y = "PAN vote share, t+1")
-
-rd2 <- RDestimate(next_PAN_pct ~ PAN_pct | estado.x + estado.y, cutpoint = 0.5, data = df_only_closest) #RDestimate does something weird when you add covariates
-summary(rd2)
+png(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Third Year Paper Results Outline/images/rdplot_bordering.png", width = 6, height = 4, units = "in", res = 300)
+rdplot(y = df_rdd_avg$change_pp_wt, x = df_rdd_avg$PAN_pct)
+dev.off()

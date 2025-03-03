@@ -77,7 +77,8 @@ plot_data$n <- as.factor(plot_data$n)
 p <- ggplot(plot_data, aes(x = n, y = est, color = ws)) +
   geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2, position = position_dodge(width = -0.5)) +
   geom_point(position = position_dodge(width = -0.5)) +
-  labs(x = "Number of References in Weighted Average", y = "RD Estimate", title = "RD Estimates by number of references included") +
+  labs(x = "Number of References in Weighted Average", y = "RD Estimate", title = "RD Estimates by number of references included",
+       subtitle = "Distance: between centroids from shapefile") +
   theme_minimal() +
   scale_color_grey()
 
@@ -125,14 +126,19 @@ print(stop_time - start_time)
 # Create a data frame for the plot, 50 km = 96% of muns in df
 robust_est <- as.data.frame(robust_est)
 colnames(robust_est) <- c("est", "ci_lower","ci_upper","ci90low", "ci90high", "percentile")
+robust_est$percentile <- as.factor(robust_est$percentile)
+robust_est <- na.omit(robust_est)
 
 percentile <- ggplot(data = robust_est, aes(x = percentile, y = est)) +
   geom_point() +
   geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper)) +
   #geom_errorbar(aes(ymin = ci90low, ymax = ci90high), alpha = 0.9, color = "gray") +
   geom_hline(yintercept = 0, color = "red", alpha = 0.3) + #, linetype = "3") + 
-  labs(x = "Percentile Centroid Distance", y = "Estimate", title = "RD Robust Estimates, weighted average by centroid distance") +
+  labs(x = "Percentile Centroid Distance", y = "Estimate", 
+       title = "RD Robust Estimates, subset by distance",
+       subtitle = "Distance: between centroids from shapefile") +
   theme_minimal()
+print(percentile)
 
 ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Third Year Paper Results Outline/images/centroid_dist_percentiles.png", plot = percentile, width = 6, height = 4)
 
