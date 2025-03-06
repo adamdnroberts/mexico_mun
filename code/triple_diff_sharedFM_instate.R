@@ -127,8 +127,29 @@ m3 <- feols(pvs ~ not_poor4*js_new*audit | audit_id + ref_mun_id, data = test)
 m4 <- feols(pvs ~ not_poor4*js_new*audit | audit_id + ref_mun_id + year, data = test)
 m5 <- feols(pvs ~ not_poor4*js_new*audit | a_e_id, data = test)
 
-etable(m0,m1,m2,m3,m4,m5)
+etable(m0,m1,m2,m3,m4,m5, tex = T)
 
 #what about both?
+test$med_both <- ifelse(test$corrupt >= summary(audits$spent_unauthorized_sub)[3] | test$not_poor >= summary(audits$spent_not_poor_sub)[3],1,0)
 
+m0 <- feols(pvs ~ med_both*js_new*audit, data = test)
+m1 <- feols(pvs ~ med_both*js_new*audit | audit_id, data = test)
+m2 <- feols(pvs ~ med_both*js_new*audit | audit_id + year, data = test)
+m3 <- feols(pvs ~ med_both*js_new*audit | audit_id + ref_mun_id, data = test)
+m4 <- feols(pvs ~ med_both*js_new*audit | audit_id + ref_mun_id + year, data = test)
+m5 <- feols(pvs ~ med_both*js_new*audit | a_e_id, data = test)
+
+etable(m0,m1,m2,m3,m4,m5)
+
+
+test$four_both <- ifelse(test$corrupt >= summary(audits$spent_unauthorized_sub)[5] | test$not_poor >= summary(audits$spent_not_poor_sub)[5],1,0)
+
+m0 <- feols(pvs ~ four_both*js_new*audit, data = test)
+m1 <- feols(pvs ~ four_both*js_new*audit | audit_id, data = test)
+m2 <- feols(pvs ~ four_both*js_new*audit | audit_id + year, data = test)
+m3 <- feols(pvs ~ four_both*js_new*audit | audit_id + ref_mun_id + year, data = test)
+m4 <- feols(pvs ~ four_both*js_new*audit | a_e_id, data = test)
+m5 <- feols(pvs ~ four_both*js_new*audit | a_e_id + year, data = test)
+
+etable(m0,m1,m2,m3,m4,m5, tex = F)
 
