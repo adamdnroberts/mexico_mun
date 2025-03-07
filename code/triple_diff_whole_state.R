@@ -9,7 +9,6 @@ audits$uniqueid <- sprintf("%05d", audits$uniqueid)
 
 mex_sf <- read_sf("~/mexico_mun/raw/mun2005shp/Municipios_2005.shp")  # Read the shapefile
 
-
 asum <- audits %>%
   group_by(uniqueid, year) %>%
   summarise(audit = mean(audit), corrupt = mean(spent_unauthorized_sub), PRI_inc = mean(PRI_inc), PAN_inc = mean(PAN_inc), PRD_inc = mean(PRD_inc), year = mean(year) )
