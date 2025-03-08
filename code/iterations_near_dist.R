@@ -13,7 +13,7 @@ df_rdd$ref_PAN_wins_t <- ifelse(df_rdd$ref_PAN_pct > 0, 1, 0)
 df_rdd_sorted <- df_rdd %>%
   arrange(mun_id, dH)
 
-df_rdd_sorted <- subset(df_rdd_sorted, main_estado == ref_estado & ref_PAN_wins_t == 0)
+#df_rdd_sorted <- subset(df_rdd_sorted, ref_PAN_wins_t == 0)
 
 # Pre-allocate the result matrix
 robust_est <- matrix(NA, nrow = 100, ncol = 7)
@@ -65,6 +65,7 @@ print(p)
 
 ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Third Year Paper Results Outline/images/num_refs_10_new_dist.png", plot = p, width = 6, height = 4)
 
+#With controls
 # Pre-allocate the result matrix
 robust_est_w_controls <- matrix(NA, nrow = 100, ncol = 7)
 
@@ -487,3 +488,65 @@ format_model_table <- function(model) {
 # Call the function with the model object
 model_table <- rbind(format_model_table(m1_0),format_model_table(m1_1),format_model_table(m2_0),format_model_table(m2_1),format_model_table(m2_2))
 print(model_table)
+
+##INCLUDE ONLY STATES THAT DON'T HAVE PAN GOVERNORS IN FIRST PERIOD
+df_rdd$main_estado_num <- substr(df_rdd$mun_id, start = 1, stop = 2)
+
+PAN_governors <- sprintf("%02d", c(2,8,11,14))
+df_rdd$gov <- ifelse(df_rdd$main_estado_num %in% PAN_governors, 1, 0)
+
+# First, sort by mun_id and then by d
+df_rdd_sorted <- df_rdd %>%
+  arrange(mun_id, dH)
+
+df_rdd_sorted <- subset(df_rdd_sorted, ref_PAN_wins == 0 & gov == 0)
+
+# Pre-allocate the result matrix
+robust_est <- matrix(NA, nrow = 100, ncol = 7)
+cer_est <- matrix(NA, nrow = 100, ncol = 7)
+
+# Vector of n values
+n_values <- 1:10
+
+# Loop through n values
+for (n in n_values) {
+  print(n)
+  df_n <- df_rdd_sorted %>%
+    group_by(mun_id) %>%
+    slice_head(n = n) %>%
+    summarise(
+      PAN_pct = mean(PAN_pct, na.rm = TRUE),
+      weighted_avg_npp = sum(ref_next_PAN_pct * weight) / sum(weight),
+      weighted_avg_pp = sum(ref_PAN_pct * weight) / sum(weight)
+    )
+  
+  df_n <- df_n %>%
+    mutate(change_pp_wt = weighted_avg_npp - weighted_avg_pp)
+  
+  md_rdr <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 1, bwselect = "mserd")
+  cer <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 1, bwselect = "cerrd")
+  
+  
+  #robust_est[n, ] <- c(md_n$est[1], md_n$ci[1, 1], md_n$ci[1, 2], n)
+  robust_est[n, ] <- c(md_rdr$coef[3], md_rdr$ci[3, 1], md_rdr$ci[3, 2], md_rdr$coef[3] - md_rdr$se[3]*1.65,  md_rdr$coef[3] + md_rdr$se[3]*1.65,n,1) 
+  cer_est[n,] <- c(cer$coef[3], cer$ci[3, 1], cer$ci[3, 2], cer$coef[3] - cer$se[3]*1.65,  cer$coef[3] + cer$se[3]*1.65, n,2)
+}
+
+# Create a data frame for the plot
+plot_data <- as.data.frame(rbind(robust_est,cer_est))
+plot_data <- na.omit(plot_data)
+colnames(plot_data) <- c("est", "ci_lower","ci_upper","ci90low", "ci90high", "n", "bw_type")
+plot_data$bw_type <- factor(plot_data$bw_type, levels = c(1,2), labels = c("MSE","CER"))
+
+plot_data$n <- as.factor(plot_data$n)
+
+p <- ggplot(plot_data, aes(x = n, y = est, color = bw_type)) +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2, position = position_dodge(width = -0.5)) +
+  geom_point(position = position_dodge(width = -0.5)) +
+  labs(x = "Number of References in Weighted Average", y = "RD Estimate", title = "RD Estimates by number of references included") +
+  theme_minimal() +
+  scale_color_grey()
+
+print(p)
+
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Third Year Paper Results Outline/images/num_refs_10_new_dist.png", plot = p, width = 6, height = 4)

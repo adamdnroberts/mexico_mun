@@ -11,7 +11,7 @@ load("~/mexico_mun/data/rdd_distance.Rdata")
 robust_est <- matrix(NA, nrow = 100, ncol = 6)
 
 # Vector of n values
-km_values <- seq(5, 50, 5)
+km_values <- seq(25, 150, 25)
 
 # Loop through n values
 start_time <- Sys.time()
@@ -46,7 +46,7 @@ colnames(robust_est) <- c("est", "ci_lower","ci_upper","ci90low", "ci90high", "k
 km_mun <- ggplot(data = robust_est, aes(x = km, y = est)) +
   geom_point() +
   geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper)) +
-  #geom_errorbar(aes(ymin = ci90low, ymax = ci90high), alpha = 0.9, color = "gray") +
+  geom_errorbar(aes(ymin = ci90low, ymax = ci90high), alpha = 0.9, color = "gray") +
   geom_hline(yintercept = 0, color = "red", alpha = 0.3) +
   labs(x = "KM limit", y = "Estimate", title = "RD Robust Estimates, municipal seat distance bins") +
   theme_minimal()

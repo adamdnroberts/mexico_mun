@@ -140,14 +140,16 @@ summary(m5m)
 # etable(m5m,check, digits = 3, tex = F) #it's the same!
 
 #full js
-m0mi <- feols(pvs ~ corruptm*js*audit + audit_inc, data = test)
-m1mi <- feols(pvs ~ corruptm*js*audit + audit_inc | audit_id, data = test)
+m0mi <- feols(pvs ~ corruptm*js*audit + audit_inc, cluster = c("a_e_id", "year"), data = test)
+m1mi <- feols(pvs ~ corruptm*js*audit + audit_inc | audit_id + ref_mun_id, cluster = c("a_e_id", "year"), data = test)
 m2mi <- feols(pvs ~ corruptm*js*audit + audit_inc | audit_id + ref_mun_id, cluster = c("a_e_id"), data = test)
 m3mi <- feols(pvs ~ corruptm*js*audit + audit_inc | audit_id + ref_mun_id, cluster = c("a_e_id","year"), data = test)
 m4mi <- feols(pvs ~ corruptm*js*audit + audit_inc | a_e_id, data = test)
 m5mi <- feols(pvs ~ corruptm*js*audit + audit_inc | a_e_id, cluster = c("a_e_id","year"), data = test)
 
-etable(m1mi,m5mi, digits = 3, tex = F)
+etable(m0mi,m1mi,m5mi, digits = 3, tex = F)
+
+summary(m0mi)
 
 #check if js is messing things up in m5m
 # test$js_corruptm <- test$js*test$corruptm
@@ -157,6 +159,34 @@ etable(m1mi,m5mi, digits = 3, tex = F)
 # 
 # check <- feols(pvs ~ corruptm*audit + js_corruptm + js_audit + js_corruptm_audit + audit_inc | a_e_id, cluster = c("a_e_id","year"), data = test)
 # etable(m5mi,check, digits = 3, tex = F) #it's the same!
+
+#try with only audit.y NAs?
+no_ay <- subset(test, is.na(audit.y))
+
+m0mi <- feols(pvs ~ corruptm*js*audit + audit_inc, data = no_ay)
+m1mi <- feols(pvs ~ corruptm*js*audit + audit_inc | audit_id + ref_mun_id, cluster = c("a_e_id", "year"), data = no_ay)
+m2mi <- feols(pvs ~ corruptm*js*audit + audit_inc | audit_id + ref_mun_id, cluster = c("a_e_id"), data = no_ay)
+m3mi <- feols(pvs ~ corruptm*js*audit + audit_inc | audit_id + ref_mun_id, cluster = c("a_e_id","year"), data = no_ay)
+m4mi <- feols(pvs ~ corruptm*js*audit + audit_inc | a_e_id, data = no_ay)
+m5mi <- feols(pvs ~ corruptm*js*audit + audit_inc | a_e_id, cluster = c("a_e_id","year"), data = no_ay)
+
+etable(m0mi,m1mi,m2mi,m3mi,m4mi,m5mi, digits = 3, tex = F)
+
+summary(m5mi)
+
+#try with excluding audit.y == 1
+zero_ay <- subset(test, audit.y == 0 | is.na(audit.y))
+
+m0mi <- feols(pvs ~ corruptm*js*audit + audit_inc, data = zero_ay)
+m1mi <- feols(pvs ~ corruptm*js*audit + audit_inc | audit_id + ref_mun_id, cluster = c("a_e_id", "year"), data = zero_ay)
+m2mi <- feols(pvs ~ corruptm*js*audit + audit_inc | audit_id + ref_mun_id, cluster = c("a_e_id"), data = zero_ay)
+m3mi <- feols(pvs ~ corruptm*js*audit + audit_inc | audit_id + ref_mun_id, cluster = c("a_e_id","year"), data = zero_ay)
+m4mi <- feols(pvs ~ corruptm*js*audit + audit_inc | a_e_id, data = zero_ay)
+m5mi <- feols(pvs ~ corruptm*js*audit + audit_inc | a_e_id, cluster = c("a_e_id","year"), data = zero_ay)
+
+etable(m1mi,m5mi, digits = 3, tex = T)
+
+summary(m5mi)
 
 #intensive margin
 new_test <- subset(test, js > 0)
