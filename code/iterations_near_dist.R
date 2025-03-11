@@ -31,15 +31,19 @@ for (n in n_values) {
     summarise(
       PAN_pct = mean(PAN_pct, na.rm = TRUE),
       weighted_avg_npp = sum(ref_next_PAN_pct * weight) / sum(weight),
-      weighted_avg_pp = sum(ref_PAN_pct * weight) / sum(weight)
+      weighted_avg_pp = sum(ref_PAN_pct * weight) / sum(weight),
+      main_estado = first(main_estado),
+      ref_estado = first(ref_estado)
     )
+  
+  df_n$main_estado <- as.factor(df_n$main_estado)
+  df_n$ref_estado <- as.factor(df_n$ref_estado)
   
   df_n <- df_n %>%
     mutate(change_pp_wt = weighted_avg_npp - weighted_avg_pp)
   
-  md_rdr <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 1, bwselect = "mserd")
-  cer <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 1, bwselect = "cerrd")
-  
+  md_rdr <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 1, bwselect = "mserd",covs = cbind(df_1$main_year,df_1$ref_year,df_1$main_estado, df_1$ref_estado), level = 90)
+  cer <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 1, bwselect = "cerrd", covs = cbind(df_1$main_year,df_1$ref_year,df_1$main_estado, df_1$ref_estado), level = 90)
   
   #robust_est[n, ] <- c(md_n$est[1], md_n$ci[1, 1], md_n$ci[1, 2], n)
   robust_est[n, ] <- c(md_rdr$coef[3], md_rdr$ci[3, 1], md_rdr$ci[3, 2], md_rdr$coef[3] - md_rdr$se[3]*1.65,  md_rdr$coef[3] + md_rdr$se[3]*1.65,n,1) 
@@ -127,7 +131,7 @@ df_1$main_estado <- as.factor(df_1$main_estado)
 df_1$ref_estado <- as.factor(df_1$ref_estado)
 
 #md_n <- RDestimate(change_pp_wt ~ PAN_pct, cutpoint = 0.5, data = df_n)
-one_ref <- rdrobust(y = df_1$change_pp, x = df_1$PAN_pct, covs = cbind(df_1$main_year,df_1$ref_year,df_1$main_estado, df_1$ref_estado), p = 1, bwselect = "cerrd")
+one_ref <- rdrobust(y = df_1$change_pp, x = df_1$PAN_pct, covs = cbind(df_1$main_year,df_1$ref_year,df_1$main_estado, df_1$ref_estado), p = 1, bwselect = "mserd", level = 90)
 summary(one_ref)
 
 df_1_ext <- subset(df_1, ref_PAN_wins_t == 0)
@@ -141,7 +145,7 @@ summary(one_ref_int)
 rdr_bw <- rdbwselect(y = df_1$ref_PAN_wins_t, x = df_1$PAN_pct, bwselect = "cerrd")
 
 png(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/3YP_Presentation_2_17_25/images/rdplot_nearest.png", width = 6, height = 4, units = "in", res = 300)
-rdplot(y = df_1$ref_PAN_wins_t, x = df_1$PAN_pct, h = rdr_bw$bws[1], p = 1, subset = abs(df_1$PAN_pct) < rdr_bw$bws[1], title = "RD for nearest municipality", x.label = "PAN Vote Share, t", y.label = "Nearest Municipalitiy PAN vote share, t+1")
+rdplot(y = df_1$change_pp, x = df_1$PAN_pct, h = one_ref$bws[1], p = 1, subset = abs(df_1$PAN_pct) < one_ref$bws[1], title = "RD for nearest municipality", x.label = "PAN Vote Share, t", y.label = "Nearest Municipalitiy PAN vote share, t+1")
 dev.off()
 
 png(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/3YP_Presentation_2_17_25/images/rdplot_nearest_full_running.png", width = 6, height = 4, units = "in", res = 300)

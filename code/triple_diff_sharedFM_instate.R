@@ -78,6 +78,7 @@ test$same_inc[test$PAN_inc.x == test$PAN_inc.y] <- 1
 test$same_inc[test$PRD_inc.x == test$PRD_inc.y] <- 1
 
 test$audit_inc <- ifelse(test$audit.x ==1 & test$audit.y == 1 & test$same_inc ==1,1,0)
+test$simult_audit <- ifelse(test$audit.x ==1 & test$audit.y == 1,1,0)
 
 test$audit <- test$audit.x
 
@@ -141,13 +142,15 @@ summary(m5m)
 
 #full js
 m0mi <- feols(pvs ~ corruptm*js*audit + audit_inc, cluster = c("a_e_id", "year"), data = test)
-m1mi <- feols(pvs ~ corruptm*js*audit + audit_inc | audit_id + ref_mun_id, cluster = c("a_e_id", "year"), data = test)
 m2mi <- feols(pvs ~ corruptm*js*audit + audit_inc | audit_id + ref_mun_id, cluster = c("a_e_id"), data = test)
 m3mi <- feols(pvs ~ corruptm*js*audit + audit_inc | audit_id + ref_mun_id, cluster = c("a_e_id","year"), data = test)
 m4mi <- feols(pvs ~ corruptm*js*audit + audit_inc | a_e_id, data = test)
 m5mi <- feols(pvs ~ corruptm*js*audit + audit_inc | a_e_id, cluster = c("a_e_id","year"), data = test)
 
-etable(m0mi,m1mi,m5mi, digits = 3, tex = F)
+etable(m0mi,m2mi,m3mi,m4mi,m5mi, digits = 3, tex = F)
+
+coefplot(m3mi, ci_level = .90)
+coefplot(m5mi, ci_level = .95)
 
 summary(m0mi)
 
@@ -177,14 +180,33 @@ summary(m5mi)
 #try with excluding audit.y == 1
 zero_ay <- subset(test, audit.y == 0 | is.na(audit.y))
 
-m0mi <- feols(pvs ~ corruptm*js*audit + audit_inc, data = zero_ay)
-m1mi <- feols(pvs ~ corruptm*js*audit + audit_inc | audit_id + ref_mun_id, cluster = c("a_e_id", "year"), data = zero_ay)
-m2mi <- feols(pvs ~ corruptm*js*audit + audit_inc | audit_id + ref_mun_id, cluster = c("a_e_id"), data = zero_ay)
-m3mi <- feols(pvs ~ corruptm*js*audit + audit_inc | audit_id + ref_mun_id, cluster = c("a_e_id","year"), data = zero_ay)
-m4mi <- feols(pvs ~ corruptm*js*audit + audit_inc | a_e_id, data = zero_ay)
-m5mi <- feols(pvs ~ corruptm*js*audit + audit_inc | a_e_id, cluster = c("a_e_id","year"), data = zero_ay)
+m0mi <- feols(pvs ~ corruptm*js*audit, data = zero_ay)
+m1mi <- feols(pvs ~ corruptm*js*audit | audit_id + ref_mun_id, cluster = c("a_e_id", "year"), data = zero_ay)
+m2mi <- feols(pvs ~ corruptm*js*audit | audit_id + ref_mun_id, cluster = c("a_e_id"), data = zero_ay)
+m3mi <- feols(pvs ~ corruptm*js*audit | audit_id + ref_mun_id, cluster = c("a_e_id","year"), data = zero_ay)
+m4mi <- feols(pvs ~ corruptm*js*audit | a_e_id, data = zero_ay)
+m5mi <- feols(pvs ~ corruptm*js*audit | a_e_id, cluster = c("a_e_id","year"), data = zero_ay)
 
-etable(m1mi,m5mi, digits = 3, tex = T)
+etable(m1mi,m5mi, digits = 3, tex = F)
+
+coefplot(m5mi, ci_level = .90)
+
+summary(m5mi)
+
+#try with excluding audit_inc == 1
+zero_ayinc <- subset(test, audit_inc != 1)
+
+m0mi <- feols(pvs ~ corruptm*js*audit, data = zero_ayinc)
+m1mi <- feols(pvs ~ corruptm*js*audit | audit_id + ref_mun_id, cluster = c("a_e_id", "year"), data = zero_ayinc)
+m2mi <- feols(pvs ~ corruptm*js*audit | audit_id + ref_mun_id, cluster = c("a_e_id"), data = zero_ayinc)
+m3mi <- feols(pvs ~ corruptm*js*audit | audit_id + ref_mun_id, cluster = c("a_e_id","year"), data = zero_ayinc)
+m4mi <- feols(pvs ~ corruptm*js*audit | a_e_id, data = zero_ayinc)
+m5mi <- feols(pvs ~ corruptm*js*audit | a_e_id, cluster = c("a_e_id","year"), data = zero_ayinc)
+
+etable(m1mi,m5mi, digits = 3, tex = F)
+
+coefplot(m1mi, ci_level = .90)
+coefplot(m5mi, ci_level = .90)
 
 summary(m5mi)
 
