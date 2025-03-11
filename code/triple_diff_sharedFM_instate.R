@@ -9,7 +9,7 @@ audits$audit_id <- sprintf("%05d", audits$uniqueid)
 
 asum <- audits %>%
   group_by(audit_id, year) %>%
-  summarise(audit = mean(audit), corrupt = mean(spent_unauthorized_sub), not_poor = mean(spent_not_poor_sub), PRI_inc = mean(PRI_inc), PAN_inc = mean(PAN_inc), PRD_inc = mean(PRD_inc), year = mean(year) )
+  dplyr::summarise(audit = mean(audit), corrupt = mean(spent_unauthorized_sub), not_poor = mean(spent_not_poor_sub), PRI_inc = mean(PRI_inc), PAN_inc = mean(PAN_inc), PRD_inc = mean(PRD_inc), year = mean(year) )
 
 load("~/mexico_mun/data/jaccard_similarity_FM.Rdata")
 
