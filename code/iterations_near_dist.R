@@ -13,7 +13,7 @@ df_rdd$ref_PAN_wins_t <- ifelse(df_rdd$ref_PAN_pct > 0, 1, 0)
 df_rdd_sorted <- df_rdd %>%
   arrange(mun_id, dH)
 
-#df_rdd_sorted <- subset(df_rdd_sorted, ref_PAN_wins_t == 0)
+df_rdd_sorted <- subset(df_rdd_sorted, ref_PAN_wins_t == 0)
 
 # Pre-allocate the result matrix
 robust_est <- matrix(NA, nrow = 100, ncol = 7)
@@ -42,8 +42,12 @@ for (n in n_values) {
   df_n <- df_n %>%
     mutate(change_pp_wt = weighted_avg_npp - weighted_avg_pp)
   
-  md_rdr <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 1, bwselect = "mserd",covs = cbind(df_1$main_year,df_1$ref_year,df_1$main_estado, df_1$ref_estado), level = 90)
-  cer <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 1, bwselect = "cerrd", covs = cbind(df_1$main_year,df_1$ref_year,df_1$main_estado, df_1$ref_estado), level = 90)
+  md_rdr <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 1, bwselect = "mserd",
+                     #covs = cbind(df_n$main_year,df_n$ref_year,df_n$main_estado, df_n$ref_estado), 
+                     level = 90)
+  cer <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 1, bwselect = "cerrd", 
+                  #covs = cbind(df_n$main_year,df_n$ref_year,df_n$main_estado, df_n$ref_estado), 
+                  level = 90)
   
   #robust_est[n, ] <- c(md_n$est[1], md_n$ci[1, 1], md_n$ci[1, 2], n)
   robust_est[n, ] <- c(md_rdr$coef[3], md_rdr$ci[3, 1], md_rdr$ci[3, 2], md_rdr$coef[3] - md_rdr$se[3]*1.65,  md_rdr$coef[3] + md_rdr$se[3]*1.65,n,1) 
@@ -67,7 +71,7 @@ p <- ggplot(plot_data, aes(x = n, y = est, color = bw_type)) +
 
 print(p)
 
-ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Third Year Paper Results Outline/images/num_refs_10_new_dist.png", plot = p, width = 6, height = 4)
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Third Year Paper Results Outline/images/num_refs_10_new_dist_same_state.png", plot = p, width = 6, height = 4)
 
 #With controls
 # Pre-allocate the result matrix
@@ -144,7 +148,7 @@ summary(one_ref_int)
 
 rdr_bw <- rdbwselect(y = df_1$ref_PAN_wins_t, x = df_1$PAN_pct, bwselect = "cerrd")
 
-png(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/3YP_Presentation_2_17_25/images/rdplot_nearest.png", width = 6, height = 4, units = "in", res = 300)
+png(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Third Year Paper Results Outline/images/rdplot_nearest_same_state.png", width = 6, height = 4, units = "in", res = 300)
 rdplot(y = df_1$change_pp, x = df_1$PAN_pct, h = one_ref$bws[1], p = 1, subset = abs(df_1$PAN_pct) < one_ref$bws[1], title = "RD for nearest municipality", x.label = "PAN Vote Share, t", y.label = "Nearest Municipalitiy PAN vote share, t+1")
 dev.off()
 
