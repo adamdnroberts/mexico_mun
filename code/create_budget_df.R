@@ -37,7 +37,7 @@ bdf2$DESCRIPCION_CATEGORIA <- NULL
 bdf2$CATEGORIA <- NULL
 bdf2$TEMA <- NULL
 
-bdf3 <- subset(bdf2, ANIO >= 1995 & ANIO <= 2000)
+#bdf3 <- subset(bdf2, ANIO >= 1995 & ANIO <= 2000)
 
 wide_budget_df <- bdf3 %>%
   pivot_wider(names_from = c(categoria), values_from = VALOR)

@@ -11,9 +11,10 @@ wide_budget_df$year <- wide_budget_df$ANIO
 
 #merge datasets
 df <- merge(big_df,wide_budget_df, by = c("mun_id", "year"))
-df <- subset(df, year <= 2000 & year >= 1995)
+df <- subset(df, year <= 1996 & year >= 1994)
 
-DCdensity(df$PAN_pct, cutpoint = 0.5)
+DCdensity(df$PAN_pct, cutpoint = 0)
+DCdensity(df$PRD_pct, cutpoint = 0, ext.out = T)
 
 #income (raw)
 rd0 <- RDestimate(ing0 ~ PAN_pct, cutpoint = 0.5, data = df)
@@ -62,19 +63,54 @@ rd11 <- RDestimate(pi_diff3 ~ PAN_pct, cutpoint = 0.5, data = df)
 summary(rd11)
 
 #rdrobust estimates
-df <-  subset(big_df, year >= 1995 & year <= 1997)
+
+wide_budget_df <- wide_budget_df %>% arrange(year)
+
+wide_budget_df$pct_imp <- wide_budget_df$Ingresos.Capítulo.Impuestos/wide_budget_df$Ingresos.Tema.Total.de.ingresos
+
+bud_lead <- wide_budget_df %>%
+  group_by(mun_id) %>%
+  mutate(imp_lead1 = lead(pct_imp, n = 1), imp_lead2 = lead(pct_imp, n = 2), imp_lead3 = lead(pct_imp, n = 3)) %>%
+  ungroup()
+
+bud_lead$pi_diff1 <- bud_lead$imp_lead1 - bud_lead$pct_imp
+bud_lead$pi_diff2 <- bud_lead$imp_lead2 - bud_lead$pct_imp
+bud_lead$pi_diff3 <- bud_lead$imp_lead3 - bud_lead$pct_imp
+
+#df <-  subset(big_df, year >= 1995 & year <= 1997)
               #& estado != "Gunajuato" & estado != "Chihuahua" & estado != "Baja California" & estado != "Jalisco")
 
-robust_taxes0 <- rdrobust(y = df$pct_imp0, x = df$PAN_pct, c = 0.5, bwselect = "mserd")
+df <- merge(big_df,bud_lead, by = c("mun_id", "year"))
+df <- subset(df, year>= 1994 & year <= 1996 
+             #& estado!="Tlaxcala" 
+             & (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PRD" | p2_name == "PRD")
+)
+
+robust_taxes0 <- rdrobust(y = df$pct_imp, x = df$PRD_pct, bwselect = "mserd")
 summary(robust_taxes0)
-
-robust_taxes1 <- rdrobust(y = df$pi_diff1, x = df$PAN_pct, c = 0.5, bwselect = "mserd")
+robust_taxes1 <- rdrobust(y = df$pi_diff1, x = df$PRD_pct,  bwselect = "mserd")
 summary(robust_taxes1)
-
-robust_taxes2 <- rdrobust(y = df$pi_diff2, x = df$PAN_pct, c = 0.5, bwselect = "mserd")
+robust_taxes2 <- rdrobust(y = df$pi_diff2, x = df$PRD_pct,  bwselect = "mserd")
 summary(robust_taxes2)
+robust_taxes3 <- rdrobust(y = df$pi_diff3, x = df$PRD_pct,  bwselect = "mserd")
+summary(robust_taxes3)
 
-robust_taxes3 <- rdrobust(y = df$pi_diff3, x = df$PAN_pct, c = 0.5, bwselect = "mserd")
+
+df <- merge(big_df,bud_lead, by = c("mun_id", "year"))
+df <- subset(df, year>= 1995 & year <= 1997)
+
+robust_taxes1 <- rdrobust(y = df$pi_diff1, x = df$PAN_pct,  bwselect = "mserd")
+summary(robust_taxes1)
+robust_taxes2 <- rdrobust(y = df$pi_diff2, x = df$PAN_pct,  bwselect = "mserd")
+summary(robust_taxes2)
+robust_taxes3 <- rdrobust(y = df$pi_diff3, x = df$PAN_pct,  bwselect = "mserd")
+summary(robust_taxes3)
+
+robust_taxes1 <- rdrobust(y = df$pi_diff1, x = df$PRD_pct,  bwselect = "mserd")
+summary(robust_taxes1)
+robust_taxes2 <- rdrobust(y = df$pi_diff2, x = df$PRD_pct,  bwselect = "mserd")
+summary(robust_taxes2)
+robust_taxes3 <- rdrobust(y = df$pi_diff3, x = df$PRD_pct,  bwselect = "mserd")
 summary(robust_taxes3)
 
 #GRAPH RESULTS
@@ -107,7 +143,7 @@ ci_data[1,6] <- NA
 taxation <- ggplot(ci_data, aes(x = Model, y = Coefficient)) +
   geom_point() +
   geom_hline(yintercept = 0, linetype = "dashed", color = "blue") +
-  geom_errorbar(aes(ymin = CI_Lower, ymax = CI_Upper), width = 0.2) +
+  #geom_errorbar(aes(ymin = CI_Lower, ymax = CI_Upper), width = 0.2) +
   geom_errorbar(aes(ymin = CI_Lower90, ymax = CI_Upper90), width = 0.2, alpha = 0.5, color = "red") +
   theme_minimal() +
   labs(title = "Effect of PAN win on municipal taxation",
@@ -162,16 +198,16 @@ DCdensity(df$PAN_pct, cutpoint = 0.5)
   
 df$estado <- as.factor(df$estado)
 
-rd12 <- rdrobust(df$pct_part, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd12 <- rdrobust(df$pct_part, df$PAN_pct,  covs = cbind(df$year,df$estado))
 summary(rd12)
 
-rd13 <- rdrobust(df$part_lead1, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd13 <- rdrobust(df$part_lead1, df$PAN_pct,  covs = cbind(df$year,df$estado))
 summary(rd13)
 
-rd14 <- rdrobust(df$part_lead2, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd14 <- rdrobust(df$part_lead2, df$PAN_pct,  covs = cbind(df$year,df$estado))
 summary(rd14)
 
-rd15 <- rdrobust(df$part_lead3, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd15 <- rdrobust(df$part_lead3, df$PAN_pct,  covs = cbind(df$year,df$estado))
 summary(rd15)
 
 # Extract coefficients and confidence intervals
@@ -234,16 +270,16 @@ DCdensity(df$PAN_pct, cutpoint = 0.5)
 
 df$estado <- as.factor(df$estado)
 
-rd12 <- rdrobust(df$pct_part, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd12 <- rdrobust(df$pct_part, df$PAN_pct,  covs = cbind(df$year,df$estado))
 summary(rd12)
 
-rd13 <- rdrobust(df$part_lead1, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd13 <- rdrobust(df$part_lead1, df$PAN_pct,  covs = cbind(df$year,df$estado))
 summary(rd13)
 
-rd14 <- rdrobust(df$part_lead2, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd14 <- rdrobust(df$part_lead2, df$PAN_pct,  covs = cbind(df$year,df$estado))
 summary(rd14)
 
-rd15 <- rdrobust(df$part_lead3, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd15 <- rdrobust(df$part_lead3, df$PAN_pct,  covs = cbind(df$year,df$estado))
 summary(rd15)
 
 # Extract coefficients and confidence intervals
@@ -305,16 +341,16 @@ DCdensity(df$PAN_pct, cutpoint = 0.5)
 
 df$estado <- as.factor(df$estado)
 
-rd12 <- rdrobust(df$pct_part, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd12 <- rdrobust(df$pct_part, df$PAN_pct,  covs = cbind(df$year,df$estado))
 summary(rd12)
 
-rd13 <- rdrobust(df$part_lead1, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd13 <- rdrobust(df$part_lead1, df$PAN_pct,  covs = cbind(df$year,df$estado))
 summary(rd13)
 
-rd14 <- rdrobust(df$part_lead2, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd14 <- rdrobust(df$part_lead2, df$PAN_pct,  covs = cbind(df$year,df$estado))
 summary(rd14)
 
-rd15 <- rdrobust(df$part_lead3, df$PAN_pct, c = 0.5, covs = cbind(df$year,df$estado))
+rd15 <- rdrobust(df$part_lead3, df$PAN_pct,  covs = cbind(df$year,df$estado))
 summary(rd15)
 
 # Extract coefficients and confidence intervals

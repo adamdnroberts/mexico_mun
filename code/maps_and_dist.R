@@ -23,6 +23,7 @@ ggplot(df_geom) +
   #coord_sf(xlim = c(bbox["xmin"], bbox["xmax"]), ylim = c(bbox["ymin"], bbox["ymax"])) +
   theme_void()
 
+df_geom$PRDwin <- ifelse(!is.na(df_geom$PRD_pct),ifelse(df_geom$PRD_pct >= 0,1,0),NA)
 df_geom$PANwin <- ifelse(!is.na(df_geom$PAN_pct),ifelse(df_geom$PAN_pct >= 0.5,1,0),NA)
 
 PAN_win_map <- ggplot(df_geom) +
@@ -32,8 +33,15 @@ PAN_win_map <- ggplot(df_geom) +
   theme_void() +
   theme(legend.position = "bottom")
 
-ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/3YP_Presentation_2_17_25/images/PAN_win_map.png", plot = PAN_win_map, width = 6, height = 4)
+PRD_win_map <- ggplot(df_geom) +
+  geom_sf(color = "white", aes(geometry = geometry, fill = as.factor(PRDwin))) +
+  labs(title = "Municipal Elections, 1995-1997", fill = "") +
+  scale_fill_manual( values = c("1" = "yellow", "0" = "lightgreen", "NA" = "gray"), labels = c("1" = "PAN Wins", "0" = "PAN Loses", "NA" = "Not Available"), na.value = "gray") +
+  theme_void() +
+  theme(legend.position = "bottom")
+print(PRD_win_map)
 
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/3YP_Presentation_2_17_25/images/PAN_win_map.png", plot = PAN_win_map, width = 6, height = 4)
 
 # Assuming df is your dataframe
 test <- df %>%

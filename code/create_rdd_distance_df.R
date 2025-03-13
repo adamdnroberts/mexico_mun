@@ -2,11 +2,10 @@ library(dplyr)
 
 load("~/mexico_mun/data/pairwise_km.Rdata")
 
-load("~/mexico_mun/data/full_dataset_mexelec.Rdata")
+load("~/mexico_mun/data/full_dataset_mexelec_pcts.Rdata")
 big_df$mun_id <- gsub(" ", "", big_df$Municipio)
-big_df$PAN_pct <- big_df$PAN_pct - 0.5
 
-df <- subset(big_df, year>= 1995 & year <= 1997 
+df <- subset(big_df, year>= 1994 & year <= 1996 
              #& estado!="Tlaxcala" 
              & (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PAN" | p2_name == "PAN")
 )
@@ -14,7 +13,7 @@ df <- subset(big_df, year>= 1995 & year <= 1997
 df$PRD_pct <- df$PRD / (df$p1 + df$p2) # PRD percentage compared to top two
 df$PRD_treat <- ifelse(df$PRD_pct > 0.5, 1, 0)
 
-df_ref <- subset(big_df, year>= 1995 & year <= 1997 
+df_ref <- subset(big_df, year>= 1994 & year <= 1996 
                  #& estado!="Tlaxcala" 
                  #& (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PAN" | p2_name == "PAN")
 )
