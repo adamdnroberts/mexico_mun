@@ -2,6 +2,7 @@ library(dplyr)
 #library(stringr)
 library(tidyr)
 
+#1995 census count
 census <- read.csv("C:/Users/adamd/Documents/mexico_mun/raw/INEGI_exporta_6_1_2025_11_28_56.csv", comment.char="#")
 colnames(census)[1] <- "mun_id"
 colnames(census)[2] <- "mun_nom"

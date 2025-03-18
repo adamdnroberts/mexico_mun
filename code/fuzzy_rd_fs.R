@@ -5,7 +5,7 @@ library(ggplot2)
 library(data.table)
 
 load("~/mexico_mun/data/full_dataset_mexbudget.Rdata")
-load("~/mexico_mun/data/full_dataset_mexelec.Rdata")
+load("~/mexico_mun/data/full_dataset_mexelec_pcts.Rdata")
 
 wide_budget_df$year <- wide_budget_df$ANIO
 
@@ -194,20 +194,18 @@ ggplot(data = test) +
 df <- merge(big_df,bud_lead, by = c("mun_id", "year"))
 df <- subset(df, year <= 1997 & year >= 1995)
 
-DCdensity(df$PAN_pct, cutpoint = 0.5)
-  
 df$estado <- as.factor(df$estado)
 
-rd12 <- rdrobust(df$pct_part, df$PAN_pct,  covs = cbind(df$year,df$estado))
+rd12 <- rdrobust(y = df$pct_part, x = df$PAN_pct)
 summary(rd12)
 
-rd13 <- rdrobust(df$part_lead1, df$PAN_pct,  covs = cbind(df$year,df$estado))
+rd13 <- rdrobust(df$part_lead1, df$PAN_pct)
 summary(rd13)
 
-rd14 <- rdrobust(df$part_lead2, df$PAN_pct,  covs = cbind(df$year,df$estado))
+rd14 <- rdrobust(df$part_lead2, df$PAN_pct)
 summary(rd14)
 
-rd15 <- rdrobust(df$part_lead3, df$PAN_pct,  covs = cbind(df$year,df$estado))
+rd15 <- rdrobust(df$part_lead3, df$PAN_pct)
 summary(rd15)
 
 # Extract coefficients and confidence intervals
@@ -241,6 +239,24 @@ fed_part <- ggplot(results, aes(x = model, y = coefficient)) +
   theme_minimal()
 
 ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Third Year Paper Results Outline/images/part_all_federal.png", plot = fed_part, width = 6, height = 4)
+
+
+#NOW WITH PRD
+
+#what if I only look at 1995?
+df95 <- subset(df, year == 1995)
+
+rd12 <- rdrobust(y = df95$pct_part, x = df95$PRD_pct)
+summary(rd12)
+
+rd13 <- rdrobust(df95$part_lead1, df95$PRD_pct)
+summary(rd13)
+
+rd14 <- rdrobust(df95$part_lead2, df95$PRD_pct)
+summary(rd14)
+
+rd15 <- rdrobust(df95$part_lead3, df95$PRD_pct)
+summary(rd15)
 
 
 #participaciones diversas

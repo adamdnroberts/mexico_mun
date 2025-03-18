@@ -3,7 +3,6 @@ library(dplyr)
 library(rdd)
 library(viridis)
 library(rdrobust)
-#library(RDHonest)
 
 load("~/mexico_mun/data/rdd_distance.Rdata")
 

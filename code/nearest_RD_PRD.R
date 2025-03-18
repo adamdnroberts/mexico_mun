@@ -17,19 +17,11 @@ df_1_PRD$main_estado <- as.factor(df_1_PRD$main_estado)
 df_1_PRD$ref_estado <- as.factor(df_1_PRD$ref_estado)
 
 #table PRD
+nc_PRD <- rdrobust(y = df_1_PRD$change_pp, x = df_1_PRD$PRD_pct, p = 1, bwselect = "cerrd", level = 90)
+
 msem_PRD <- rdrobust(y = df_1_PRD$change_pp, x = df_1_PRD$PRD_pct, p = 1, covs = cbind(df_1_PRD$main_year, df_1_PRD$main_estado, df_1_PRD$dH), bwselect = "mserd", level = 90)
 
 cerm_PRD <- rdrobust(y = df_1_PRD$change_pp, x = df_1_PRD$PRD_pct, p = 1, covs = cbind(df_1_PRD$main_year, df_1_PRD$main_estado, df_1_PRD$dH), bwselect = "cerrd", level = 90)
-
-
-plot_PRD <- subset(df_1_PRD, abs(df_1_PRD$PRD_pct) < cerm$bws[1])
-#Plot
-png(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP Final Tables and Figures/images/PRD_nearest_rdplot.png", width = 6, height = 4, units = "in", res = 300)
-rdplot(y = plot_PRD$change_pp, x = plot_PRD$PRD_pct, p=1,
-       covs = cbind(plot_PRD$main_year, plot_PRD$main_estado, plot_PRD$dH),
-       #subset = abs(plot_PRD$PRD_pct) < cerm$bws[1], 
-       title = "", x.label = "PRD Vote Share, t", y.label = "Nearest Municipalitiy PRD vote share, t+1")
-dev.off()
 
 ### PAN
 load("~/mexico_mun/data/rdd_distance_PAN.Rdata")
@@ -45,6 +37,8 @@ df_1_PAN$main_estado <- as.factor(df_1_PAN$main_estado)
 df_1_PAN$ref_estado <- as.factor(df_1_PAN$ref_estado)
 
 #table PAN
+nc_PAN <- rdrobust(y = df_1_PAN$change_pp, x = df_1_PAN$PAN_pct, p = 1, bwselect = "cerrd", level = 90)
+
 msem_PAN <- rdrobust(y = df_1_PAN$change_pp, x = df_1_PAN$PAN_pct, p = 1, covs = cbind(df_1_PAN$main_year, df_1_PAN$main_estado, df_1_PAN$dH), bwselect = "mserd", level = 90)
 
 cer_PAN <- rdrobust(y = df_1_PAN$change_pp, x = df_1_PAN$PAN_pct, p = 1, 
@@ -84,15 +78,7 @@ create_model_table <- function(..., metrics = c("Party", "Coefficient", "Standar
 }
 
 # Example usage
-create_model_table(msem_PRD, cerm_PRD, msem_PAN, cer_PAN)
-
-plot_PAN <- subset(df_1_PAN, abs(df_1_PAN$PAN_pct) < cer_PAN$bws[1])
-#Plot
-png(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP Final Tables and Figures/images/PAN_nearest_rdplot.png", width = 6, height = 4, units = "in", res = 300)
-rdplot(y = plot_PAN$change_pp, x = plot_PAN$PAN_pct, p=3,
-       covs = cbind(plot_PAN$main_year, plot_PAN$main_estado, plot_PAN$dH),
-       title = "", x.label = "PAN Vote Share, t", y.label = "Nearest Municipalitiy PAN vote share, t+1")
-dev.off()
+create_model_table(nc_PRD, cerm_PRD, msem_PRD, nc_PAN, cer_PAN, msem_PAN)
 
 # DO I NEED THIS?
 
@@ -111,25 +97,68 @@ summary(PRD_runs)
 PRD_runs <- rdrobust(y = df_1_PRD$PRD_runs_next, x = df_1_PRD$PRD_pct, p = 1, covs = cbind(df_1_PRD$main_year, df_1_PRD$main_estado,df_1_PRD$dH), bwselect = "cerrd", level= 90)
 summary(PRD_runs)
 
-#drop places where PRD doesn't run (PRD Always Runs)
-PAR <- subset(df_1_PRD, PRD_runs_next == 1)
+df_1_PRD$ref_PRD_wins_t2 <- ifelse(df_1_PRD$ref_next_PRD_pct > 0, 1, 0)
+PRD_wins <- rdrobust(y = df_1_PRD$ref_PRD_wins_t2, x = df_1_PRD$PRD_pct, p = 4, covs = cbind(df_1_PRD$main_year, df_1_PRD$main_estado,df_1_PRD$dH), bwselect = "cerrd", level= 90)
+summary(PRD_wins)
 
-PAR_m <- rdrobust(y = PAR$change_pp, x = PAR$PRD_pct, p = 3, covs = cbind(PAR$main_year, PAR$main_estado), bwselect = "cerrd", level = 90)
-summary(PAR_m)
+rdplot(y = df_1_PRD$ref_PRD_wins_t2, x = df_1_PRD$PRD_pct, p = 4, subset = abs(df_1_PRD$PRD_pct) < 0.077)
 
-load("~/mexico_mun/data/rdd_distance_PRD.Rdata")
+df_1_PAN$ref_PAN_wins_t2 <- ifelse(df_1_PAN$ref_next_PAN_pct > 0, 1, 0)
+PAN_wins <- rdrobust(y = df_1_PAN$ref_PAN_wins_t2, x = df_1_PAN$PAN_pct, p = 1, covs = cbind(df_1_PAN$main_year, df_1_PAN$main_estado,df_1_PAN$dH), bwselect = "cerrd", level= 90)
+summary(PAN_wins)
 
-df_1_PRD <- df_rdd_PRD %>%
-  group_by(mun_id) %>%
-  slice_head(n = 1)
+rdplot(y = df_1_PAN$ref_PAN_wins_t2, x = df_1_PAN$PAN_pct, p = 1, subset = abs(df_1_PAN$PAN_pct) < 0.05)
 
-df_1_PRD <- df_1_PRD %>%
-  mutate(change_pp = ref_next_PRD_pct - ref_PRD_pct)
+#PLOTS
 
-df_1_PRD$main_estado <- as.factor(df_1_PRD$main_estado)
-df_1_PRD$ref_estado <- as.factor(df_1_PRD$ref_estado)
+plot_PAN <- subset(df_1_PAN, abs(df_1_PAN$PAN_pct) < 0.05)
 
-#table PRD
-msem <- rdrobust(y = df_1_PRD_PAN$change_pp, x = df_1_PRD_PAN$PRD_pct, p = 1, covs = cbind(df_1_PRD_PAN$main_year, df_1_PRD_PAN$main_estado, df_1_PRD_PAN$dH), bwselect = "mserd", level = 90)
+percentiles <- seq(0, 1, by = 0.05)
 
-cerm <- rdrobust(y = df_1_PRD_PAN$change_pp, x = df_1_PRD_PAN$PRD_pct, p = 1, covs = cbind(df_1_PRD_PAN$main_year, df_1_PRD_PAN$main_estado, df_1_PRD_PAN$dH), bwselect = "cerrd", level = 90)
+# Calculate the percentiles
+percentile_values <- quantile(plot_PAN$PAN_pct, percentiles, na.rm = TRUE)
+
+plot_PAN_bins <- plot_PAN %>%
+  mutate(percentile = cut(PAN_pct, breaks = percentile_values, include.lowest = TRUE, labels = FALSE)) %>%
+  group_by(percentile) %>%
+  summarise(avg_change_pp = mean(change_pp, na.rm = TRUE),
+            bin_center = mean(PAN_pct, na.rm = TRUE),
+            count = n())
+
+
+ggplot(plot_PAN, aes(x = PAN_pct, y = change_pp)) +
+  geom_point(aes(x = bin_center, y = avg_change_pp), alpha = 0.5, data = subset(plot_PAN_bins, bin_center < 0), color = "darkgreen") +
+  geom_point(aes(x = bin_center, y = avg_change_pp), alpha = 0.5, data = subset(plot_PAN_bins, bin_center > 0), color = "blue") +
+  geom_smooth(method = "lm", color = "darkgreen", fill = "lightgreen", data = subset(plot_PAN, PAN_pct < 0), level = .9) +
+  geom_smooth(method = "lm", color = "blue", fill = "lightblue", data = subset(plot_PAN, PAN_pct > 0), level = 0.9) +
+  geom_vline(xintercept = 0, color = "black", linetype = 2) +
+  #geom_hline(yintercept = 0.5, color = "blue", size = 1, alpha = 0.5) +
+  labs(title = "Regression Discontinuity Design",
+       x = "PAN vote share, t",
+       y = "Change in PAN vote share, t+1") +
+  theme_minimal()
+
+plot_PRD <- subset(df_1_PRD, abs(df_1_PRD$PRD_pct) < 0.05)
+
+percentiles <- seq(0, 1, by = 0.05)
+
+# Calculate the percentiles
+percentile_values <- quantile(plot_PRD$PRD_pct, percentiles, na.rm = TRUE)
+
+plot_PRD_bins <- plot_PRD %>%
+  mutate(percentile = cut(PRD_pct, breaks = percentile_values, include.lowest = TRUE, labels = FALSE)) %>%
+  group_by(percentile) %>%
+  summarise(avg_change_pp = mean(change_pp, na.rm = TRUE),
+             bin_center = mean(PRD_pct, na.rm = TRUE),
+             count = n())
+
+ggplot(plot_PRD, aes(x = PRD_pct, y = change_pp)) +
+  geom_point(aes(x = bin_center, y = avg_change_pp), alpha = 0.5, data = subset(plot_PRD_bins, bin_center < 0 & avg_change_pp > -0.2), color = "darkgreen") +
+  geom_point(aes(x = bin_center, y = avg_change_pp), alpha = 0.5, data = subset(plot_PRD_bins, bin_center > 0), color = "goldenrod") +
+  geom_smooth(method = "lm", color = "darkgreen", fill = "lightgreen", data = subset(plot_PRD, PRD_pct < 0), level = 0.9) +
+  geom_smooth(method = "lm", color = "goldenrod", fill = "yellow", data = subset(plot_PRD, PRD_pct > 0), level = 0.9) +
+  geom_vline(xintercept = 0, color = "black", linetype = 2) +
+  labs(title = "Regression Discontinuity Design",
+       x = "PRD vote share, t",
+       y = "Change in PRD vote share, t+1") +
+  theme_minimal()

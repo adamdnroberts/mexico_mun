@@ -12,8 +12,8 @@ elec_full <- subset(big_df, year >=1995 & year <= 1997)
 elec <- subset(elec_full, select = c(mun_id, prev_PAN_pct))
 
 # Keep only the earliest row for each mun_id 
-#elec_earliest <- elec %>% group_by(mun_id) %>% slice_min(order_by = year, with_ties = FALSE) %>% ungroup()
-#no states with multiple elections in this period, so no need for this
+# elec_earliest <- elec %>% group_by(mun_id) %>% slice_min(order_by = year, with_ties = FALSE) %>% ungroup()
+# no states with multiple elections in this period, so no need for this
 
 load("~/mexico_mun/data/mexpop.Rdata")
 pop_full <- subset(mun_cen_final, year == 1995)
@@ -54,7 +54,7 @@ load("~/mexico_mun/data/rural_mun_pop.Rdata")
 merge1 <- merge(elec, pop, by = "mun_id")
 merge2 <- merge(merge1, budget, by = "mun_id")
 merge3 <- merge(merge2, size, by = "mun_id")
-merge4 <- merge(merge3,dist, by = "mun_id")
+merge4 <- merge(merge3, dist, by = "mun_id")
 merge5 <- merge(merge4, fed_elec_w_key, by = "mun_id")
 mah_dist_full <- merge(merge5, rural, by = "mun_id")
 

@@ -5,7 +5,7 @@ library(readxl)
 library(rdd)
 
 #dataviz
-load("~/mexico_mun/data/full_dataset_mexelec.Rdata")
+load("~/mexico_mun/data/full_dataset_mexelec_pcts.Rdata")
 
 df <- subset(big_df, year>=1995 & year <= 2000) # & (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PAN" | p2_name == "PAN"))
 
@@ -25,9 +25,9 @@ summary(next_elec)
 #probably good that this doesn't show an effect?
 ggplot(df, aes(x = PAN_pct, y = next_PAN_pct)) +
   geom_point(alpha = 0.5) +
-  geom_smooth(method = "loess", color = "darkgreen", data = subset(df, PAN_pct < 0.5)) +
-  geom_smooth(method = "loess", color = "blue", data = subset(df, PAN_pct >= 0.5)) +
-  geom_vline(xintercept = 0.5, color = "red") +
+  geom_smooth(method = "lm", color = "darkgreen", data = subset(df, PAN_pct < 0)) +
+  geom_smooth(method = "lm", color = "blue", data = subset(df, PAN_pct > 0)) +
+  geom_vline(xintercept = 0, color = "red") +
   #geom_hline(yintercept = 0.5, color = "blue", size = 1, alpha = 0.5) +
   labs(title = "Regression Discontinuity Design",
        x = "PAN vote share, t",

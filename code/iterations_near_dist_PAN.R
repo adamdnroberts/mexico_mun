@@ -3,7 +3,7 @@ library(dplyr)
 library(viridis)
 library(rdrobust)
 
-load("~/mexico_mun/data/rdd_distance_PRD.Rdata")
+load("~/mexico_mun/data/rdd_distance_PAN.Rdata")
 
 # Pre-allocate the result matrix
 robust_est <- matrix(NA, nrow = 100, ncol = 7)
@@ -15,13 +15,13 @@ n_values <- 1:5
 # Loop through n values
 for (n in n_values) {
   print(n)
-  df_n <- df_rdd_PRD %>%
+  df_n <- df_rdd_PAN %>%
     group_by(mun_id) %>%
     slice_head(n = n) %>%
     summarise(
-      PRD_pct = mean(PRD_pct, na.rm = TRUE),
-      weighted_avg_npp = sum(ref_next_PRD_pct * weight) / sum(weight),
-      weighted_avg_pp = sum(ref_PRD_pct * weight) / sum(weight),
+      PAN_pct = mean(PAN_pct, na.rm = TRUE),
+      weighted_avg_npp = sum(ref_next_PAN_pct * weight) / sum(weight),
+      weighted_avg_pp = sum(ref_PAN_pct * weight) / sum(weight),
       main_estado = first(main_estado),
       ref_estado = first(ref_estado)
     )
@@ -32,10 +32,10 @@ for (n in n_values) {
   df_n <- df_n %>%
     mutate(change_pp_wt = weighted_avg_npp - weighted_avg_pp)
   
-  md_rdr <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_pct, p = 1, bwselect = "mserd",
+  md_rdr <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 1, bwselect = "mserd",
                      #covs = cbind(df_n$main_year,df_n$ref_year,df_n$main_estado, df_n$ref_estado), 
                      level = 90)
-  cer <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_pct, p = 1, bwselect = "cerrd", 
+  cer <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 1, bwselect = "cerrd", 
                   #covs = cbind(df_n$main_year,df_n$ref_year,df_n$main_estado, df_n$ref_estado), 
                   level = 90)
   
@@ -64,7 +64,7 @@ p <- ggplot(subset(plot_data, bw_type == "MSE"), aes(x = n, y = est, color = bw_
 
 print(p)
 
-ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Third Year Paper Results Outline/images/App_5_near_PRD.png", plot = p, width = 6, height = 4)
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Third Year Paper Results Outline/images/App_5_near_PAN.png", plot = p, width = 6, height = 4)
 
 #With controls
 # Pre-allocate the result matrix
@@ -76,13 +76,13 @@ n_values <- 1:5
 # Loop through n values
 for (n in n_values) {
   print(n)
-  df_n <- df_rdd_PRD %>%
+  df_n <- df_rdd_PAN %>%
     group_by(mun_id) %>%
     slice_head(n = n) %>%
     summarise(
-      PRD_pct = mean(PRD_pct, na.rm = TRUE),
-      weighted_avg_npp = sum(ref_next_PRD_pct * weight) / sum(weight),
-      weighted_avg_pp = sum(ref_PRD_pct * weight) / sum(weight),
+      PAN_pct = mean(PAN_pct, na.rm = TRUE),
+      weighted_avg_npp = sum(ref_next_PAN_pct * weight) / sum(weight),
+      weighted_avg_pp = sum(ref_PAN_pct * weight) / sum(weight),
       main_year = first(main_year),
       main_estado = first(main_estado),
       weighted_avg_dH = sum(dH * weight) / sum(weight)
@@ -93,7 +93,7 @@ for (n in n_values) {
   
   df_n$main_estado <- as.factor(df_n$main_estado)
   
-  md_rdr <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_pct, p = 1, covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "cerrd", level= 90)
+  md_rdr <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 1, covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "cerrd", level= 90)
   
   robust_est_w_controls[n, ] <- c(md_rdr$coef[3], md_rdr$ci[3, 1], md_rdr$ci[3, 2], md_rdr$coef[3] - md_rdr$se[3]*1.65,  md_rdr$coef[3] + md_rdr$se[3]*1.65,n,1) 
 }
@@ -112,13 +112,13 @@ p <- ggplot(plot_data, aes(x = n, y = est)) +
   geom_point(position = position_dodge(width = -0.5)) +
   labs(x = "Number of References in Weighted Average", 
        y = "RD Estimate (90% CI)", 
-       title = "PRD RD Estimates by number of references included", 
+       title = "PAN RD Estimates by number of references included", 
        subtitle = "controls: state & year of mun elections") +
   theme_minimal()
 
 print(p)
 
-ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP Final Tables and Figures/images/PRD_5_nearest_w_controls.png", plot = p, width = 6, height = 4)
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP Final Tables and Figures/images/PAN_5_nearest_w_controls.png", plot = p, width = 6, height = 4)
 
 #With controls, 1-3 order polynomial
 # Pre-allocate the result matrix
@@ -127,18 +127,18 @@ poly_order2 <- matrix(NA, nrow = 100, ncol = 5)
 poly_order3 <- matrix(NA, nrow = 100, ncol = 5)
 
 # Vector of n values
-n_values <- 1:10
+n_values <- 1:5
 
 # Loop through n values
 for (n in n_values) {
   print(n)
-  df_n <- df_rdd_PRD %>%
+  df_n <- df_rdd_PAN %>%
     group_by(mun_id) %>%
     slice_head(n = n) %>%
     summarise(
-      PRD_pct = mean(PRD_pct, na.rm = TRUE),
-      weighted_avg_npp = sum(ref_next_PRD_pct * weight) / sum(weight),
-      weighted_avg_pp = sum(ref_PRD_pct * weight) / sum(weight),
+      PAN_pct = mean(PAN_pct, na.rm = TRUE),
+      weighted_avg_npp = sum(ref_next_PAN_pct * weight) / sum(weight),
+      weighted_avg_pp = sum(ref_PAN_pct * weight) / sum(weight),
       main_year = first(main_year),
       main_estado = first(main_estado),
       weighted_avg_dH = sum(dH * weight) / sum(weight)
@@ -149,9 +149,9 @@ for (n in n_values) {
   
   df_n$main_estado <- as.factor(df_n$main_estado)
   
-  p1 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_pct, p = 1,  covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "cerrd", level= 90)
-  p2 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_pct, p = 2,  covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "cerrd", level= 90)
-  p3 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_pct, p = 3,  covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "cerrd", level= 90)
+  p1 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 1,  covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "cerrd", level= 90)
+  p2 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 2,  covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "cerrd", level= 90)
+  p3 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 3,  covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "cerrd", level= 90)
   
   poly_order1[n, ] <- c(p1$coef[3], p1$ci[3, 1], p1$ci[3, 2],n,1)
   poly_order2[n, ] <- c(p2$coef[3], p2$ci[3, 1], p2$ci[3, 2],n,2) 
