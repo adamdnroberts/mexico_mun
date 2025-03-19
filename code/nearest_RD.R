@@ -80,35 +80,6 @@ create_model_table <- function(..., metrics = c("Party", "Coefficient", "Standar
 # Example usage
 create_model_table(nc_PRD, cerm_PRD, msem_PRD, nc_PAN, cer_PAN, msem_PAN)
 
-# DO I NEED THIS?
-
-##EXAMINE SUPPLY SIDE
-
-#are they just dropping out in nearby places?
-df_1_PRD$PRD_runs_next <- ifelse(df_1_PRD$ref_next_PRD_pct > -0.5, 1, 0)
-summary(df_1_PRD$PRD_runs_next)
-
-PRD_runs <- rdrobust(y = df_1_PRD$PRD_runs_next, x = df_1_PRD$PRD_pct, p = 3, covs = cbind(df_1_PRD$main_year, df_1_PRD$main_estado), bwselect = "cerrd", level = 90)
-summary(PRD_runs)
-
-PRD_runs <- rdrobust(y = df_1_PRD$PRD_runs_next, x = df_1_PRD$PRD_pct, p = 2, covs = cbind(df_1_PRD$main_year, df_1_PRD$main_estado,df_1_PRD$dH), bwselect = "cerrd", level= 90)
-summary(PRD_runs)
-
-PRD_runs <- rdrobust(y = df_1_PRD$PRD_runs_next, x = df_1_PRD$PRD_pct, p = 1, covs = cbind(df_1_PRD$main_year, df_1_PRD$main_estado,df_1_PRD$dH), bwselect = "cerrd", level= 90)
-summary(PRD_runs)
-
-df_1_PRD$ref_PRD_wins_t2 <- ifelse(df_1_PRD$ref_next_PRD_pct > 0, 1, 0)
-PRD_wins <- rdrobust(y = df_1_PRD$ref_PRD_wins_t2, x = df_1_PRD$PRD_pct, p = 4, covs = cbind(df_1_PRD$main_year, df_1_PRD$main_estado,df_1_PRD$dH), bwselect = "cerrd", level= 90)
-summary(PRD_wins)
-
-rdplot(y = df_1_PRD$ref_PRD_wins_t2, x = df_1_PRD$PRD_pct, p = 4, subset = abs(df_1_PRD$PRD_pct) < 0.077)
-
-df_1_PAN$ref_PAN_wins_t2 <- ifelse(df_1_PAN$ref_next_PAN_pct > 0, 1, 0)
-PAN_wins <- rdrobust(y = df_1_PAN$ref_PAN_wins_t2, x = df_1_PAN$PAN_pct, p = 1, covs = cbind(df_1_PAN$main_year, df_1_PAN$main_estado,df_1_PAN$dH), bwselect = "cerrd", level= 90)
-summary(PAN_wins)
-
-rdplot(y = df_1_PAN$ref_PAN_wins_t2, x = df_1_PAN$PAN_pct, p = 1, subset = abs(df_1_PAN$PAN_pct) < 0.05)
-
 #PLOTS
 
 plot_PAN <- subset(df_1_PAN, abs(df_1_PAN$PAN_pct) < 0.05)
@@ -126,17 +97,20 @@ plot_PAN_bins <- plot_PAN %>%
             count = n())
 
 
-ggplot(plot_PAN, aes(x = PAN_pct, y = change_pp)) +
+PAN_RD <- ggplot(plot_PAN, aes(x = PAN_pct, y = change_pp)) +
   geom_point(aes(x = bin_center, y = avg_change_pp), alpha = 0.5, data = subset(plot_PAN_bins, bin_center < 0), color = "darkgreen") +
   geom_point(aes(x = bin_center, y = avg_change_pp), alpha = 0.5, data = subset(plot_PAN_bins, bin_center > 0), color = "blue") +
-  geom_smooth(method = "lm", color = "darkgreen", fill = "lightgreen", data = subset(plot_PAN, PAN_pct < 0), level = .9) +
+  geom_smooth(method = "lm", color = "darkgreen", fill = "lightgreen", data = subset(plot_PAN, PAN_pct < 0), level = 0.9) +
   geom_smooth(method = "lm", color = "blue", fill = "lightblue", data = subset(plot_PAN, PAN_pct > 0), level = 0.9) +
   geom_vline(xintercept = 0, color = "black", linetype = 2) +
   #geom_hline(yintercept = 0.5, color = "blue", size = 1, alpha = 0.5) +
-  labs(title = "Regression Discontinuity Design",
+  labs(title = "",
        x = "PAN vote share, t",
        y = "Change in PAN vote share, t+1") +
   theme_minimal()
+
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP Final Tables and Figures/images/PAN_RD.png", plot = PAN_RD, width = 6, height = 4)
+
 
 plot_PRD <- subset(df_1_PRD, abs(df_1_PRD$PRD_pct) < 0.05)
 
@@ -152,13 +126,44 @@ plot_PRD_bins <- plot_PRD %>%
              bin_center = mean(PRD_pct, na.rm = TRUE),
              count = n())
 
-ggplot(plot_PRD, aes(x = PRD_pct, y = change_pp)) +
+PRD_RD <- ggplot(plot_PRD, aes(x = PRD_pct, y = change_pp)) +
   geom_point(aes(x = bin_center, y = avg_change_pp), alpha = 0.5, data = subset(plot_PRD_bins, bin_center < 0 & avg_change_pp > -0.2), color = "darkgreen") +
   geom_point(aes(x = bin_center, y = avg_change_pp), alpha = 0.5, data = subset(plot_PRD_bins, bin_center > 0), color = "goldenrod") +
   geom_smooth(method = "lm", color = "darkgreen", fill = "lightgreen", data = subset(plot_PRD, PRD_pct < 0), level = 0.9) +
   geom_smooth(method = "lm", color = "goldenrod", fill = "yellow", data = subset(plot_PRD, PRD_pct > 0), level = 0.9) +
   geom_vline(xintercept = 0, color = "black", linetype = 2) +
-  labs(title = "Regression Discontinuity Design",
+  labs(title = "",
        x = "PRD vote share, t",
        y = "Change in PRD vote share, t+1") +
   theme_minimal()
+
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP Final Tables and Figures/images/PRD_RD.png", plot = PRD_RD, width = 6, height = 4)
+
+
+#APPENDIX STUFF
+# DO I NEED THIS?
+
+##EXAMINE SUPPLY SIDE
+
+#are they just dropping out in nearby places?
+df_1_PRD$PRD_runs_next <- ifelse(df_1_PRD$ref_next_PRD_pct > -0.5, 1, 0)
+summary(df_1_PRD$PRD_runs_next)
+
+PRD_runs <- rdrobust(y = df_1_PRD$PRD_runs_next, x = df_1_PRD$PRD_pct, p = 1, covs = cbind(df_1_PRD$main_year, df_1_PRD$main_estado,df_1_PRD$dH), bwselect = "cerrd", level= 90)
+summary(PRD_runs)
+
+df_1_PRD$ref_PRD_wins_t2 <- ifelse(df_1_PRD$ref_next_PRD_pct > 0, 1, 0)
+PRD_wins <- rdrobust(y = df_1_PRD$ref_PRD_wins_t2, x = df_1_PRD$PRD_pct, p = 1, covs = cbind(df_1_PRD$main_year, df_1_PRD$main_estado,df_1_PRD$dH), bwselect = "cerrd", level= 90)
+summary(PRD_wins)
+
+df_1_PAN$PAN_runs_next <- ifelse(df_1_PAN$ref_next_PAN_pct > -0.5, 1, 0)
+summary(df_1_PAN$PAN_runs_next)
+
+PAN_runs <- rdrobust(y = df_1_PAN$PAN_runs_next, x = df_1_PAN$PAN_pct, p = 1, covs = cbind(df_1_PAN$main_year, df_1_PAN$main_estado,df_1_PAN$dH), bwselect = "cerrd", level= 90)
+summary(PAN_runs)
+
+df_1_PAN$ref_PAN_wins_t2 <- ifelse(df_1_PAN$ref_next_PAN_pct > 0, 1, 0)
+PAN_wins <- rdrobust(y = df_1_PAN$ref_PAN_wins_t2, x = df_1_PAN$PAN_pct, p = 1, covs = cbind(df_1_PAN$main_year, df_1_PAN$main_estado,df_1_PAN$dH), bwselect = "cerrd", level= 90)
+summary(PAN_wins)
+
+rdplot(y = df_1_PAN$PAN_runs_next, x = df_1_PAN$PAN_pct, p = 1, subset = abs(df_1_PAN$PAN_pct) < 0.058)
