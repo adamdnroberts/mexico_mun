@@ -13,6 +13,6 @@ summary(rddensity(X = test))
 
 mt <- rddensity(X = test)
 
-plot <- rdplotdensity(mt, test, xlabel = "Opposition party vote share")
+plot <- rdplotdensity(mt, test, xlabel = "Opposition party vote share", plotRange = c(-0.3,0.3))
 
 ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP Final Tables and Figures/images/manipulation_test.png", plot = plot$Estplot, width = 6, height = 4)
