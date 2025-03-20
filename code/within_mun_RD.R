@@ -10,8 +10,10 @@ treated_before <- unique(treated_df_before$mun_id)
 df <- subset(big_df, !(mun_id %in% treated_before) & year >=1995 & year <= 1997)
 df$estado <- as.factor(df$estado)
 df$year <- as.factor(df$year)
+df <- df %>%
+  mutate(change_pp = next_PAN_pct - PAN_pct)
 
-PAN_within <- rdrobust(y = df$next_PAN_pct, x = df$PAN_pct, 
+PAN_within <- rdrobust(y = df$change_pp, x = df$PAN_pct, 
                        covs = cbind(df$estado, df$year), 
                        p = 1, bwselect = "cerrd", level = 90)
 summary(PAN_within)
@@ -24,9 +26,11 @@ treated_before <- unique(treated_df_before$mun_id)
 df <- subset(big_df, !(mun_id %in% treated_before) & year >=1995 & year <= 1997)
 df$estado <- as.factor(df$estado)
 df$year <- as.factor(df$year)
+df <- df %>%
+  mutate(change_pp = next_PRD_pct -PRD_pct)
 
 #what's going on
-PRD_within <- rdrobust(y = df$next_PRD_pct, x = df$PRD_pct, 
+PRD_within <- rdrobust(y = df$change_pp, x = df$PRD_pct, 
                        covs = cbind(df$estado, df$year), 
                        p = 1, bwselect = "cerrd", level = 90)
 summary(PRD_within)
