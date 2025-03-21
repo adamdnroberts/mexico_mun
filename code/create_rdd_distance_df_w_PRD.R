@@ -23,15 +23,17 @@ treated_df_before <- subset(big_df, year <= 1994 & PRD_treat == 1)
 treated_before <- unique(treated_df_before$mun_id)
 
 #create smaller datasets for merge
-ref_PRD <- subset(df_ref, select = c(year, mun_id, next_PRD_pct, PRD_pct, estado))
+ref_PRD <- subset(df_ref, select = c(year, mun_id, next_PRD_pct, PRD_pct, next_PAN_pct, PAN_pct, estado))
 ref_PRD_not_treated <- ref_PRD[!ref_PRD$mun_id %in% treated, ]
 
-main_mun_PRD <- subset(df, select = c(year, mun_id, PRD_pct, estado))
+main_mun_PRD <- subset(df, select = c(year, mun_id, PRD_pct, PAN_pct, estado))
 main_mun_PRD_not_treated <- main_mun_PRD[!main_mun_PRD$mun_id %in% treated_before, ]
 
 #merge datasets using adjacent municipalities index
 ref2 <- merge(dH_df,ref_PRD_not_treated, by.x = c("neighbor"), by.y = c("mun_id"))
-ref2 <- ref2 %>% rename(ref_PRD_pct = PRD_pct, ref_next_PRD_pct = next_PRD_pct, ref_estado = estado, ref_year = year)
+ref2 <- ref2 %>% rename(ref_PRD_pct = PRD_pct, ref_next_PRD_pct = next_PRD_pct, 
+                        ref_PAN_pct = PAN_pct, ref_next_PAN_pct = next_PAN_pct, 
+                        ref_estado = estado, ref_year = year)
 ref2$ref_PRD_wins <- ifelse(ref2$ref_PRD_pct > 0, 1, 0)
 
 df_rdd <- merge(main_mun_PRD_not_treated,ref2, by.x = c("mun_id"), by.y = c("mun"))
@@ -44,8 +46,6 @@ df_rdd$weight <- 1/df_rdd$dH
 df_rdd_sorted <- df_rdd %>%
   arrange(mun_id, dH)
 
-df_rdd <- subset(df_rdd_sorted, ref_PRD_wins == 0 & main_estado == ref_estado & ref_next_PRD_pct > -0.5)
-
-df_rdd_PRD <- df_rdd
+df_rdd_PRD <- df_rdd_sorted
 
 save(df_rdd_PRD, file = "C:/Users/adamd/Documents/mexico_mun/data/rdd_distance_PRD.Rdata")
