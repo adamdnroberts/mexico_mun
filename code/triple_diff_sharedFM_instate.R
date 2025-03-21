@@ -1,4 +1,4 @@
-library(sf)
+library(car)
 library(dplyr)
 library(ggplot2)
 library(fixest)
@@ -9,22 +9,24 @@ zero_ay <- subset(radio, audit.y == 0 | is.na(audit.y))
 zero_ayinc <- subset(radio, audit_inc != 1)
 
 #no outcome audit
-noa <- feols(pvs ~ corruptm*js*audit + coalition_partners.x, cluster = c("a_e_id", "year"), data = zero_ay)
+noa <- feols(pvs ~ corruptm*js*audit + coalition_partners.x + coalition_partners.y, cluster = c("a_e_id", "year"), data = zero_ay)
 noa_fe <- feols(pvs ~ corruptm*js*audit + coalition_partners.x | audit_id + ref_mun_id, cluster = c("a_e_id","year"), data = zero_ay)
-noa_pair_fe <- feols(pvs ~ corruptm*js*audit + coalition_partners.x | a_e_id, cluster = c("a_e_id","year"), data = zero_ay)
+noa_pair_fe <- feols(pvs ~ corruptm*js*audit + coalition_partners.x + coalition_partners.y | a_e_id, cluster = c("a_e_id","year"), data = zero_ay)
+
+linearHypothesis(noa_pair_fe, "corruptm:js:audit = js:audit ")
 
 #no same incumbent audit
-nia <- feols(pvs ~ corruptm*js*audit + coalition_partners.x, cluster = c("a_e_id", "year"), data = zero_ayinc)
+nia <- feols(pvs ~ corruptm*js*audit + coalition_partners.x + coalition_partners.y, cluster = c("a_e_id", "year"), data = zero_ayinc)
 nia_fe <- feols(pvs ~ corruptm*js*audit + coalition_partners.x | audit_id + ref_mun_id, cluster = c("a_e_id","year"), data = zero_ayinc)
-nia_pair_fe <- feols(pvs ~ corruptm*js*audit + coalition_partners.x | a_e_id, cluster = c("a_e_id","year"), data = zero_ayinc)
+nia_pair_fe <- feols(pvs ~ corruptm*js*audit + coalition_partners.x + coalition_partners.y | a_e_id, cluster = c("a_e_id","year"), data = zero_ayinc)
 
 #control for same party simultaneous audits
-csa <- feols(pvs ~ corruptm*js*audit + coalition_partners.x + audit_inc, cluster = c("a_e_id", "year"), data = radio)
-csa_fe <- feols(pvs ~ corruptm*js*audit + coalition_partners.x + audit_inc | audit_id + ref_mun_id, cluster = c("a_e_id","year"), data = radio)
-csa_pair_fe <- feols(pvs ~ corruptm*js*audit + coalition_partners.x + audit_inc | a_e_id, cluster = c("a_e_id","year"), data = radio)
+csa <- feols(pvs ~ corruptm*js*audit + coalition_partners.x + audit_inc + coalition_partners.y, cluster = c("a_e_id", "year"), data = radio)
+csa_fe <- feols(pvs ~ corruptm*js*audit + coalition_partners.x + audit_inc + coalition_partners.y | audit_id + ref_mun_id, cluster = c("a_e_id","year"), data = radio)
+csa_pair_fe <- feols(pvs ~ corruptm*js*audit + coalition_partners.x + audit_inc + coalition_partners.y | a_e_id, cluster = c("a_e_id","year"), data = radio)
 
 #for appendix
-etable(noa,noa_pair_fe,nia,nia_pair_fe,csa,csa_pair_fe, digits = 3, tex = T)
+etable(noa,noa_pair_fe,nia,nia_pair_fe,csa,csa_pair_fe, digits = 3, tex = F)
 
 #for paper
 etable(noa,noa_pair_fe, digits = 3, tex = F)

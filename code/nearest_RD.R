@@ -19,7 +19,6 @@ PRD_nn <- PRD_nn %>%
          change_pp_PAN = ref_next_PAN_pct - ref_PAN_pct)
 
 PRD_nn$main_estado <- as.factor(PRD_nn$main_estado)
-PRD_nn$ref_estado <- as.factor(PRD_nn$ref_estado)
 
 #table PRD
 nc_PRD <- rdrobust(y = PRD_nn$change_pp_PRD, x = PRD_nn$PRD_pct, p = 1, bwselect = "cerrd", level = 90)
@@ -29,6 +28,8 @@ msem_PRD <- rdrobust(y = PRD_nn$change_pp_PRD, x = PRD_nn$PRD_pct, p = 1, covs =
 cerm_PRD <- rdrobust(y = PRD_nn$change_pp_PRD, x = PRD_nn$PRD_pct, p = 1, covs = cbind(PRD_nn$main_year, PRD_nn$main_estado, PRD_nn$dH), bwselect = "cerrd", level = 90)
 
 ### PAN
+load("~/mexico_mun/data/rdd_distance_PAN.Rdata")
+
 df_rdd_PAN_new <- subset(df_rdd_PAN, ref_PAN_wins == 0 & main_estado == ref_estado & ref_next_PAN_pct > -0.5)
 
 PAN_nn <- df_rdd_PAN_new %>%
@@ -40,7 +41,6 @@ PAN_nn <- PAN_nn %>%
          change_pp_PAN = ref_next_PAN_pct - ref_PAN_pct)
 
 PAN_nn$main_estado <- as.factor(PAN_nn$main_estado)
-PAN_nn$ref_estado <- as.factor(PAN_nn$ref_estado)
 
 #table PAN
 nc_PAN <- rdrobust(y = PAN_nn$change_pp_PAN, x = PAN_nn$PAN_pct, p = 1, bwselect = "cerrd", level = 90)
@@ -49,23 +49,21 @@ msem_PAN <- rdrobust(y = PAN_nn$change_pp_PAN, x = PAN_nn$PAN_pct, p = 1, covs =
 
 cerm_PAN <- rdrobust(y = PAN_nn$change_pp_PAN, x = PAN_nn$PAN_pct, p = 1, covs = cbind(PAN_nn$main_year, PAN_nn$main_estado, PAN_nn$dH), bwselect = "cerrd", level = 90)
 
-create_model_table(nc_PRD, cerm_PRD, nc_PAN, cer_PAN, output_type = "text")
+#CREATE THE TABLE
+create_model_table(nc_PRD, cerm_PRD, nc_PAN, cerm_PAN, output_type = "text")
 
 #Effect on other party
+#table PRD
+nc_PRD <- rdrobust(y = PRD_nn$change_pp_PAN, x = PRD_nn$PRD_pct, p = 1, bwselect = "cerrd", level = 90)
+
+cerm_PRD <- rdrobust(y = PRD_nn$change_pp_PAN, x = PRD_nn$PRD_pct, p = 1, covs = cbind(PRD_nn$main_year, PRD_nn$main_estado, PRD_nn$dH), bwselect = "cerrd", level = 90)
+
 #table PAN
-nc_PAN <- rdrobust(y = PAN_nn$change_pp_PAN, x = PAN_nn$PAN_pct, p = 1, bwselect = "cerrd", level = 90)
+nc_PAN <- rdrobust(y = PAN_nn$change_pp_PRD, x = PAN_nn$PAN_pct, p = 1, bwselect = "cerrd", level = 90)
 
-cerm_PAN <- rdrobust(y = PAN_nn$change_pp_PAN, x = PAN_nn$PAN_pct, p = 1, covs = cbind(PAN_nn$main_year, PAN_nn$main_estado, PAN_nn$dH), bwselect = "cerrd", level = 90)
+cerm_PAN <- rdrobust(y = PAN_nn$change_pp_PRD, x = PAN_nn$PAN_pct, p = 1, covs = cbind(PAN_nn$main_year, PAN_nn$main_estado, PAN_nn$dH), bwselect = "cerrd", level = 90)
 
-
-#table PAN
-nc_PAN <- rdrobust(y = df_1_PAN$change_pp_PRD, x = df_1_PAN$PAN_pct, p = 1, bwselect = "cerrd", level = 90)
-
-cer_PAN <- rdrobust(y = df_1_PAN$change_pp_PRD, x = df_1_PAN$PAN_pct, p = 1, 
-                    covs = cbind(df_1_PAN$main_year, df_1_PAN$main_estado, df_1_PAN$dH), 
-                    bwselect = "cerrd", level = 90)
-
-create_model_table(nc_PRD, cerm_PRD, nc_PAN, cer_PAN, output_type = "latex")
+create_model_table(nc_PRD, cerm_PRD, nc_PAN, cerm_PAN, output_type = "latex")
 
 #PLOTS
 

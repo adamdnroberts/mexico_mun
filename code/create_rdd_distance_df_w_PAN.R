@@ -1,5 +1,4 @@
 library(dplyr)
-library(rdd)
 
 load("~/mexico_mun/data/pairwise_km.Rdata")
 

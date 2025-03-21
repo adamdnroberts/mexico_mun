@@ -1,5 +1,4 @@
 library(dplyr)
-library(rdd)
 
 load("~/mexico_mun/data/pairwise_km.Rdata")
 
@@ -10,6 +9,8 @@ df <- subset(big_df, year>= 1995 & year <= 1997
              #& estado!="Tlaxcala" 
              #& (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PRD" | p2_name == "PRD")
 )
+
+#df <- df[, colSums(is.na(df)) != nrow(df)] No coalitions in this!
 
 df_ref <- subset(big_df, year>= 1995 & year <= 1997 
                  #& estado!="Tlaxcala" 
