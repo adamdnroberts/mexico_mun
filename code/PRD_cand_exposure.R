@@ -1,6 +1,7 @@
 library(dplyr)
 library(rdrobust)
 library(fixest)
+library(ggplot2)
 
 load("~/mexico_mun/data/pairwise_km.Rdata")
 
@@ -80,17 +81,53 @@ test <- PRD_nn
 
 test$PRD_treat <- ifelse(test$PRD_pct > 0, 1, 0)
 m <- feols(change_pp_PRD ~ PRD_pct + PRD_treat*c_index | main_estado, cluster = "neighbor", data = test)
-summary(m)
+etable(m)
 
-cerm_PRD <- rdrobust(y = PRD_nn$change_pp_PRD, x = PRD_nn$PRD_pct, p = 1, covs = cbind(PRD_nn$main_year, PRD_nn$main_estado, PRD_nn$dH, PRD_nn$c_index), bwselect = "cerrd", level = 90)
-summary(cerm_PRD)
+cindex_PRD <- rdrobust(y = PRD_nn$change_pp_PRD, x = PRD_nn$PRD_pct, p = 1, covs = cbind(PRD_nn$main_year, PRD_nn$main_estado, PRD_nn$dH, PRD_nn$c_index), bwselect = "cerrd", level = 90)
+summary(cindex_PRD)
 
-test <- subset(PRD_nn, c_index <= 2)
+# Define a function to extract coefficients
+extract_coefficients <- function(model) {
+  coef <- model1$coef[3]
+  return(coef)
+}
 
-cerm_PRD <- rdrobust(y = test$change_pp_PRD, x = test$PRD_pct, p = 1, covs = cbind(test$main_year, test$main_estado, test$dH, test$c_index), bwselect = "cerrd", level = 90)
-summary(cerm_PRD)
+# Subset data and fit models
+test1 <- subset(PRD_nn, c_index <= 1)
+model1 <- rdrobust(y = test1$change_pp_PRD, x = test1$PRD_pct, p = 1, covs = cbind(test1$main_year, test1$main_estado, test1$dH, test1$c_index), bwselect = "cerrd", level = 90)
 
-test <- subset(PRD_nn, c_index > 2)
+test2 <- subset(PRD_nn, c_index > 1 & c_index <= 3)
+model2 <- rdrobust(y = test2$change_pp_PRD, x = test2$PRD_pct, p = 1, covs = cbind(test2$main_year, test2$main_estado, test2$dH, test2$c_index), bwselect = "cerrd", level = 90)
 
-cerm_PRD <- rdrobust(y = test$change_pp_PRD, x = test$PRD_pct, p = 1, covs = cbind(test$main_year, test$main_estado, test$dH, test$c_index), bwselect = "cerrd", level = 90)
-summary(cerm_PRD)
+test3 <- subset(PRD_nn, c_index > 3)
+model3 <- rdrobust(y = test3$change_pp_PRD, x = test3$PRD_pct, p = 1, covs = cbind(test3$main_year, test3$main_estado, test3$dH, test3$c_index), bwselect = "cerrd", level = 90)
+
+cindex_models <- matrix(NA, nrow = 3, ncol = 4)
+
+# Extract coefficients
+cindex_models[1, ] <- c(model1$coef[3], model1$ci[3, 1], model1$ci[3, 2], 1)
+cindex_models[2, ] <- c(model2$coef[3], model2$ci[3, 1], model2$ci[3, 2], 2) 
+cindex_models[3, ] <- c(model3$coef[3], model3$ci[3, 1], model3$ci[3, 2], 3) 
+
+
+# Create a data frame for the plot
+plot_data <- as.data.frame(cindex_models)
+plot_data <- na.omit(plot_data)
+colnames(plot_data) <- c("est", "ci_lower","ci_upper","n")
+
+plot_data$n <- factor(plot_data$n, levels = c(1,2,3), labels = c("0-1", "2-3", "4-5"))
+
+p <- ggplot(plot_data, aes(x = n, y = est)) +
+  geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2, position = position_dodge(width = -0.5)) +
+  geom_point(position = position_dodge(width = -0.5)) +
+  labs(x = "Number of Previous PRD candidates", 
+       y = "RD Estimate (90% CI)", 
+       title = "", 
+       subtitle = "") +
+  theme_minimal()
+
+print(p)
+
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP Final Tables and Figures Appendix/images/PRD_c_index_models.png", plot = p, width = 6, height = 4)
+
