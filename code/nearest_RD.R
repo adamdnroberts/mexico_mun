@@ -168,9 +168,11 @@ PRD_wins <- rdrobust(y = PRD_nns$ref_PRD_wins_t2, x = PRD_nns$PRD_pct, p = 1, co
 summary(PRD_wins)
 
 #PAN
-df_1_PAN$PAN_runs_next <- ifelse(df_1_PAN$ref_next_PAN_pct > -0.5, 1, 0)
-summary(df_1_PAN$PAN_runs_next) #no muns where PAN doesn't run!
+PAN_nn$PAN_runs_next <- ifelse(PAN_nn$ref_next_PAN_pct > -0.5, 1, 0)
+summary(PAN_nn$PAN_runs_next) #no muns where PAN doesn't run!
 
-df_1_PAN$ref_PAN_wins_t2 <- ifelse(df_1_PAN$ref_next_PAN_pct > 0, 1, 0)
-PAN_wins <- rdrobust(y = df_1_PAN$ref_PAN_wins_t2, x = df_1_PAN$PAN_pct, p = 1, covs = cbind(df_1_PAN$main_year, df_1_PAN$main_estado,df_1_PAN$dH), bwselect = "cerrd", level= 90)
+PAN_nn$ref_PAN_wins_t2 <- ifelse(PAN_nn$ref_next_PAN_pct > 0, 1, 0)
+PAN_wins <- rdrobust(y = PAN_nn$ref_PAN_wins_t2, x = PAN_nn$PAN_pct, p = 1, covs = cbind(PAN_nn$main_year, PAN_nn$main_estado,PAN_nn$dH), bwselect = "cerrd", level= 90)
 summary(PAN_wins)
+
+create_model_table(PRD_wins, PAN_wins)
