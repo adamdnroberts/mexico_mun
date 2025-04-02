@@ -55,14 +55,15 @@ summary_data <- subset_merge2 %>%
 mean_pop <- ggplot(subset(summary_data, !is.na(party_win)), aes(x = party_win, y = mean_population, fill = party_win)) +
   geom_bar(stat = "identity", color = "black") +
   geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
-  scale_fill_manual(values = c("PRI" = "darkgreen", "PAN" = "blue", "PRD" = "gold")) +
+  scale_fill_manual(values = c("PRI" = "gray", "PAN" = "lightblue", "PRD" = "gold")) +
   labs(title = "",
        x = "",
        y = "Mean Population") +
-  theme_minimal() +
+  theme_classic() +
   theme(legend.position = "none")
+print(mean_pop)
 
-ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP Final Tables and Figures/images/party_means_pop.png", plot = mean_pop, width = 6, height = 4)
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP_draft/images/party_means_pop.png", plot = mean_pop, width = 6, height = 4)
 
 
 # MAKE INCOME BAR GRAPHS
@@ -82,11 +83,11 @@ summary_data <- subset_merge2 %>%
 mean_income <- ggplot(subset(summary_data, !is.na(party_win)), aes(x = party_win, y = mean_income, fill = party_win)) +
   geom_bar(stat = "identity", color = "black") +
   geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
-  scale_fill_manual(values = c("PRI" = "darkgreen", "PAN" = "blue", "PRD" = "gold")) +
+  scale_fill_manual(values = c("PRI" = "gray", "PAN" = "lightblue", "PRD" = "gold")) +
   labs(title = "",
        x = "",
        y = "Mean Income (Millions Mex$)") +
-  theme_minimal() +
+  theme_classic() +
   theme(legend.position = "none")
 
-ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP Final Tables and Figures/images/party_means_income.png", plot = mean_income, width = 6, height = 4)
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP_draft/images/party_means_income.png", plot = mean_income, width =6, height = 4)
