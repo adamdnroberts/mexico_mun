@@ -9,6 +9,8 @@ load("~/mexico_mun/data/rdd_distance_PAN.Rdata")
 # Pre-allocate the result matrix
 robust_est_w_controls <- matrix(NA, nrow = 100, ncol = 7)
 
+df_rdd_PAN <- subset(df_rdd_PAN, ref_PAN_wins == 0 & main_estado == ref_estado)
+
 # Vector of n values
 n_values <- 1:5
 
@@ -60,7 +62,7 @@ p <- ggplot(plot_data, aes(x = n, y = est)) +
 
 print(p)
 
-ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP Final Tables and Figures/images/PAN_5_nearest_w_controls.png", plot = p, width = 6, height = 4)
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP_draft/images/PAN_5_nearest_w_controls.png", plot = p, width = 6, height = 4)
 
 #With controls, 1-3 order polynomial
 # Pre-allocate the result matrix

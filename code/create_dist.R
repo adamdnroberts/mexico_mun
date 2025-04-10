@@ -2,7 +2,7 @@ library(dplyr)
 library(data.table)
 library(geosphere)
 
-load("~/mexico_RD/data/mun_ll.Rdata")
+load("~/mexico_mun/data/mun_ll.Rdata")
 
 # Pre-allocate a matrix
 n <- nrow(mun_ll)
@@ -36,7 +36,7 @@ colnames(dist_df) <- c("mun", "neighbor", "d")
 #convert d to numeric
 dist_df$d <- as.numeric(dist_df$d)
 
-save(dist_df, file = "~/mexico_RD/pairwise_distances.Rdata")
+save(dist_df, file = "~/mexico_mun/pairwise_distances.Rdata")
 
 summary(dist_df$d)
 

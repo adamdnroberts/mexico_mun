@@ -8,7 +8,7 @@ source("~/mexico_mun/code/function_create_rd_table.R") #for function create_mode
 
 load("~/mexico_mun/data/rdd_distance_PRD.Rdata")
 
-df_rdd_PRD_new <- subset(df_rdd_PRD, ref_PRD_wins == 0 & main_estado == ref_estado & ref_next_PRD_pct > -0.5)
+df_rdd_PRD_new <- subset(df_rdd_PRD, ref_PRD_wins == 0 & main_estado == ref_estado & ref_next_PRD_pct > -1)
 
 PRD_nn <- df_rdd_PRD_new %>%
   group_by(mun_id) %>%
@@ -30,7 +30,7 @@ cerm_PRD <- rdrobust(y = PRD_nn$change_pp_PRD, x = PRD_nn$PRD_pct, p = 1, covs =
 ### PAN
 load("~/mexico_mun/data/rdd_distance_PAN.Rdata")
 
-df_rdd_PAN_new <- subset(df_rdd_PAN, ref_PAN_wins == 0 & main_estado == ref_estado & ref_next_PAN_pct > -0.5)
+df_rdd_PAN_new <- subset(df_rdd_PAN, ref_PAN_wins == 0 & main_estado == ref_estado & ref_next_PAN_pct > -1)
 
 PAN_nn <- df_rdd_PAN_new %>%
   group_by(mun_id) %>%
@@ -50,7 +50,7 @@ msem_PAN <- rdrobust(y = PAN_nn$change_pp_PAN, x = PAN_nn$PAN_pct, p = 1, covs =
 cerm_PAN <- rdrobust(y = PAN_nn$change_pp_PAN, x = PAN_nn$PAN_pct, p = 1, covs = cbind(PAN_nn$main_year, PAN_nn$main_estado, PAN_nn$dH), bwselect = "cerrd", level = 90)
 
 #CREATE THE TABLE
-create_model_table(nc_PRD, cerm_PRD, nc_PAN, cerm_PAN, output_type = "text")
+create_model_table(nc_PRD, cerm_PRD, nc_PAN, cerm_PAN, output_type = "latex")
 
 #Effect on other party
 #table PRD

@@ -9,6 +9,8 @@ load("~/mexico_mun/data/rdd_distance_PRD.Rdata")
 # Pre-allocate the result matrix
 robust_est_w_controls <- matrix(NA, nrow = 100, ncol = 7)
 
+df_rdd_PRD <- subset(df_rdd_PRD, ref_PRD_wins == 0 & main_estado == ref_estado)
+
 # Vector of n values
 n_values <- 1:5
 
@@ -24,7 +26,7 @@ for (n in n_values) {
       weighted_avg_pp = sum(ref_PRD_pct * weight) / sum(weight),
       main_year = first(main_year),
       main_estado = first(main_estado),
-      weighted_avg_dH = sum(dH * weight) / sum(weight)
+      avg_dH = mean(dH)
     )
   
   df_n <- df_n %>%
@@ -34,7 +36,7 @@ for (n in n_values) {
   df_n$main_year <- as.factor(df_n$main_year)
   
   md_rdr <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_pct, p = 1, 
-                     covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), 
+                     covs = cbind(df_n$main_year, df_n$main_estado,df_n$avg_dH), 
                      bwselect = "cerrd", level= 90)
   
   robust_est_w_controls[n, ] <- c(md_rdr$coef[3], md_rdr$ci[3, 1], md_rdr$ci[3, 2], md_rdr$coef[3] - md_rdr$se[3]*1.65,  md_rdr$coef[3] + md_rdr$se[3]*1.65,n,1) 
@@ -60,7 +62,7 @@ p <- ggplot(plot_data, aes(x = n, y = est)) +
 
 print(p)
 
-ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP Final Tables and Figures/images/PRD_5_nearest_w_controls.png", plot = p, width = 6, height = 4)
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP_draft/images/PRD_5_nearest_w_controls.png", plot = p, width = 6, height = 4)
 
 #With controls, 1-3 order polynomial
 # Pre-allocate the result matrix

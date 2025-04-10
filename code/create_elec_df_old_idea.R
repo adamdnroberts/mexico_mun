@@ -35,6 +35,13 @@ big_df <- big_df %>% select(-PSN...184, -PSN...185, -PSN...186)
 
 big_df$mun_id <- gsub(" ", "", big_df$Municipio)
 
+big_df$PAN_pct_old <- big_df$PAN_pct
+big_df$PRD_pct_old <- big_df$PRD_pct
+
+big_df$PAN_pct <- ifelse(big_df$PAN == big_df$p1, big_df$PAN/big_df$TOTAL - big_df$p2/big_df$TOTAL, big_df$PAN/big_df$TOTAL - big_df$p1/big_df$TOTAL)
+
+big_df$PRD_pct <- ifelse(big_df$PRD == big_df$p1, big_df$PRD/big_df$TOTAL - big_df$p2/big_df$TOTAL, big_df$PRD/big_df$TOTAL - big_df$p1/big_df$TOTAL)
+
 big_df <- big_df %>%
   arrange(mun_id, year) %>%
   mutate(prev_PAN_pct = lag(PAN_pct, n = 1), next_PAN_pct = lead(PAN_pct, n = 1), prev_PRD_pct = lag(PRD_pct, n = 1), next_PRD_pct = lead(PRD_pct, n = 1))

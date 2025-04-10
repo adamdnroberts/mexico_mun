@@ -1,6 +1,6 @@
 library(dplyr)
 
-load("~/mexico_mun/data/pairwise_km.Rdata")
+load("~/mexico_mun/data/pairwise_distances.Rdata")
 
 load("~/mexico_mun/data/full_dataset_mexelec_pcts.Rdata")
 big_df$mun_id <- gsub(" ", "", big_df$Municipio)
