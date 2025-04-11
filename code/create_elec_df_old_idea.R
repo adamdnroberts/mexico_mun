@@ -35,10 +35,23 @@ big_df <- big_df %>% select(-PSN...184, -PSN...185, -PSN...186)
 
 big_df$mun_id <- gsub(" ", "", big_df$Municipio)
 
+#check pairs
+df <- subset(big_df, year>= 1995 & year <= 1997)
+
+no_PRI <- subset(df, p1_name != "PRI" & p2_name != "PRI")
+
+no_PRI$parties <- paste(no_PRI$p1_name, no_PRI$p2_name)
+unique(no_PRI$parties)
+
+#######
+
 big_df$PAN_pct_old <- big_df$PAN_pct
 big_df$PRD_pct_old <- big_df$PRD_pct
 
 big_df$PAN_pct <- ifelse(big_df$PAN == big_df$p1, big_df$PAN/big_df$TOTAL - big_df$p2/big_df$TOTAL, big_df$PAN/big_df$TOTAL - big_df$p1/big_df$TOTAL)
+
+big_df$PAN_pct <- ifelse(big_df$PAN == big_df$p1, big_df$PAN/big_df$TOTAL - big_df$PRI/big_df$TOTAL, big_df$PAN/big_df$TOTAL - big_df$p1/big_df$TOTAL)
+
 
 big_df$PRD_pct <- ifelse(big_df$PRD == big_df$p1, big_df$PRD/big_df$TOTAL - big_df$p2/big_df$TOTAL, big_df$PRD/big_df$TOTAL - big_df$p1/big_df$TOTAL)
 

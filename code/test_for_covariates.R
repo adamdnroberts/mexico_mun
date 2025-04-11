@@ -200,7 +200,7 @@ for (i in 1:29) {
   
 }
 
-models <- list(distance, y95, y96, y97, population, income, )
+models <- list(distance, y95, y96, y97, population, income )
 i = 29
 
 get_object_name <- function(obj) {

@@ -26,7 +26,7 @@ for (n in n_values) {
       weighted_avg_pp = sum(ref_PAN_pct * weight) / sum(weight),
       main_year = first(main_year),
       main_estado = first(main_estado),
-      weighted_avg_dH = sum(dH * weight) / sum(weight)
+      avg_dH = mean(dH)
     )
   
   df_n <- df_n %>%
@@ -36,7 +36,7 @@ for (n in n_values) {
   df_n$main_year <- as.factor(df_n$main_year)
   
   md_rdr <- rdrobust(y = df_n$change_pp_wt, x = df_n$PAN_pct, p = 1, 
-                     covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), 
+                     covs = cbind(df_n$main_year, df_n$main_estado,df_n$avg_dH), 
                      bwselect = "cerrd", level= 90)
   
   robust_est_w_controls[n, ] <- c(md_rdr$coef[3], md_rdr$ci[3, 1], md_rdr$ci[3, 2], md_rdr$coef[3] - md_rdr$se[3]*1.65,  md_rdr$coef[3] + md_rdr$se[3]*1.65,n,1) 
@@ -52,13 +52,13 @@ plot_data$n <- as.factor(plot_data$n)
 
 p <- ggplot(plot_data, aes(x = n, y = est)) +
   geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
-  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2, position = position_dodge(width = -0.5)) +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0, position = position_dodge(width = -0.5)) +
   geom_point(position = position_dodge(width = -0.5)) +
   labs(x = "Number of References in Weighted Average", 
        y = "RD Estimate (90% CI)", 
        title = "", 
-       subtitle = "Controls: state & year of municipal elections, distance") +
-  theme_minimal()
+       subtitle = "") +
+  theme_classic()
 
 print(p)
 
@@ -113,12 +113,11 @@ plot_data$n <- as.factor(plot_data$n)
 
 p <- ggplot(plot_data, aes(x = n, y = est, color = order)) +
   geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
-  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2, position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0, position = position_dodge(width = 0.5)) +
   geom_point(position = position_dodge(width = 0.5)) +
   labs(x = "Number of References in Weighted Average", y = "RD Estimate (90% CI)", 
-       title = "", 
-       subtitle = "controls: state & year of municipal elections") +
-  theme_minimal()
+       title = "") +
+  theme_classic()
 
 print(p)
 
@@ -171,12 +170,12 @@ plot_data$n <- as.factor(plot_data$n)
 
 p <- ggplot(plot_data, aes(x = n, y = est, color = bw_type)) +
   geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
-  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2, position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0, position = position_dodge(width = 0.5)) +
   geom_point(position = position_dodge(width = 0.5)) +
   labs(x = "Number of References in Weighted Average", 
        y = "RD Estimate (90% CI)", 
-       title = "RD Estimates by number of references included") +
-  theme_minimal() +
+       title = "") +
+  theme_classic() +
   scale_color_grey()
 
 print(p)

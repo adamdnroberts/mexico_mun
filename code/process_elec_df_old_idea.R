@@ -1,5 +1,5 @@
 #create list of columns to exclude when calculating max/second
-no_part <- c("p1", "p2","TOTAL","Municipio","year","p1_name","p2_name","estado")
+no_part <- c("p1", "p2","TOTAL","Municipio","year","p1_name","p2_name","estado", "NO REG.", "ANULADOS")
 
 # functions used in the main function
 first_largest_colname <- function(row, df) {

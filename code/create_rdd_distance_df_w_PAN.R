@@ -7,8 +7,10 @@ big_df$mun_id <- gsub(" ", "", big_df$Municipio)
 
 df <- subset(big_df, year>= 1995 & year <= 1997 
              #& estado!="Tlaxcala" 
-             #& (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PAN" | p2_name == "PAN")
+             & (p1_name == "PRI" | p2_name == "PRI") #& (p1_name == "PAN" | p2_name == "PAN")
 )
+
+#df <- df[, colSums(is.na(df)) != nrow(df)] No coalitions in this!
 
 df_ref <- subset(big_df, year>= 1995 & year <= 1997 
                  #& estado!="Tlaxcala" 

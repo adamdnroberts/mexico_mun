@@ -52,13 +52,13 @@ plot_data$n <- as.factor(plot_data$n)
 
 p <- ggplot(plot_data, aes(x = n, y = est)) +
   geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
-  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2, position = position_dodge(width = -0.5)) +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0, position = position_dodge(width = -0.5)) +
   geom_point(position = position_dodge(width = -0.5)) +
   labs(x = "Number of References in Weighted Average", 
        y = "RD Estimate (90% CI)", 
        title = "", 
-       subtitle = "Controls: state & year of municipal elections, distance") +
-  theme_minimal()
+       subtitle = "") +
+  theme_classic()
 
 print(p)
 
@@ -113,12 +113,11 @@ plot_data$n <- as.factor(plot_data$n)
 
 p <- ggplot(plot_data, aes(x = n, y = est, color = order)) +
   geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
-  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2, position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0, position = position_dodge(width = 0.5)) +
   geom_point(position = position_dodge(width = 0.5)) +
   labs(x = "Number of References in Weighted Average", y = "RD Estimate (90% CI)", 
-       title = "", 
-       subtitle = "controls: state & year of municipal elections") +
-  theme_minimal()
+       title = "") +
+  theme_classic()
 
 print(p)
 
@@ -171,12 +170,12 @@ plot_data$n <- as.factor(plot_data$n)
 
 p <- ggplot(plot_data, aes(x = n, y = est, color = bw_type)) +
   geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
-  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2, position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0, position = position_dodge(width = 0.5)) +
   geom_point(position = position_dodge(width = 0.5)) +
   labs(x = "Number of References in Weighted Average", 
        y = "RD Estimate (90% CI)", 
-       title = "RD Estimates by number of references included") +
-  theme_minimal() +
+       title = "") +
+  theme_classic() +
   scale_color_grey()
 
 print(p)
