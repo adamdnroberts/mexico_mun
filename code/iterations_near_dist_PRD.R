@@ -21,7 +21,7 @@ for (n in n_values) {
     group_by(mun_id) %>%
     slice_head(n = n) %>%
     summarise(
-      PRD_pct = mean(PRD_pct, na.rm = TRUE),
+      PRD_margin = mean(PRD_margin, na.rm = TRUE),
       weighted_avg_npp = sum(ref_next_PRD_pct * weight) / sum(weight),
       weighted_avg_pp = sum(ref_PRD_pct * weight) / sum(weight),
       main_year = first(main_year),
@@ -35,10 +35,10 @@ for (n in n_values) {
   df_n$main_estado <- as.factor(df_n$main_estado)
   df_n$main_year <- as.factor(df_n$main_year)
   
-  m90 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_pct, p = 1, 
+  m90 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_margin, p = 1, 
                      covs = cbind(df_n$main_year, df_n$main_estado,df_n$avg_dH), 
                      bwselect = "cerrd", level= 90)
-  m95 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_pct, p = 1, 
+  m95 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_margin, p = 1, 
                   covs = cbind(df_n$main_year, df_n$main_estado,df_n$avg_dH), 
                   bwselect = "cerrd", level= 95)
   
@@ -89,7 +89,7 @@ for (n in n_values) {
     group_by(mun_id) %>%
     slice_head(n = n) %>%
     summarise(
-      PRD_pct = mean(PRD_pct, na.rm = TRUE),
+      PRD_margin = mean(PRD_margin, na.rm = TRUE),
       weighted_avg_npp = sum(ref_next_PRD_pct * weight) / sum(weight),
       weighted_avg_pp = sum(ref_PRD_pct * weight) / sum(weight),
       main_year = first(main_year),
@@ -103,9 +103,9 @@ for (n in n_values) {
   df_n$main_estado <- as.factor(df_n$main_estado)
   df_n$main_year <- as.factor(df_n$main_year)
   
-  p1 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_pct, p = 1,  covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "cerrd", level= 90)
-  p2 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_pct, p = 2,  covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "cerrd", level= 90)
-  p3 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_pct, p = 3,  covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "cerrd", level= 90)
+  p1 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_margin, p = 1,  covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "cerrd", level= 90)
+  p2 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_margin, p = 2,  covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "cerrd", level= 90)
+  p3 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_margin, p = 3,  covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "cerrd", level= 90)
   
   poly_order1[n, ] <- c(p1$coef[3], p1$ci[3, 1], p1$ci[3, 2],n,1)
   poly_order2[n, ] <- c(p2$coef[3], p2$ci[3, 1], p2$ci[3, 2],n,2) 
@@ -148,7 +148,7 @@ for (n in n_values) {
     group_by(mun_id) %>%
     slice_head(n = n) %>%
     summarise(
-      PRD_pct = mean(PRD_pct, na.rm = TRUE),
+      PRD_margin = mean(PRD_margin, na.rm = TRUE),
       weighted_avg_npp = sum(ref_next_PRD_pct * weight) / sum(weight),
       weighted_avg_pp = sum(ref_PRD_pct * weight) / sum(weight),
       main_year = first(main_year),
@@ -162,8 +162,8 @@ for (n in n_values) {
   df_n$main_estado <- as.factor(df_n$main_estado)
   df_n$main_year <- as.factor(df_n$main_year)
   
-  mse <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_pct, p = 1,  covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "mserd", level= 90)
-  cer <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_pct, p = 1,  covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "cerrd", level= 90)
+  mse <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_margin, p = 1,  covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "mserd", level= 90)
+  cer <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_margin, p = 1,  covs = cbind(df_n$main_year, df_n$main_estado,df_n$weighted_avg_dH), bwselect = "cerrd", level= 90)
   
   mse_est[n, ] <- c(mse$coef[3], mse$ci[3, 1], mse$ci[3, 2],n,2) 
   cer_est[n, ] <- c(cer$coef[3], cer$ci[3, 1], cer$ci[3, 2],n,1) 
