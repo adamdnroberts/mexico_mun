@@ -24,7 +24,7 @@ treated_before <- unique(treated_df_before$mun_id)
 ref_PRD <- subset(df_ref, select = c(year, mun_id, next_PRD_pct, PRD_pct, next_PAN_pct, PAN_pct, estado))
 ref_PRD_not_treated <- ref_PRD[!ref_PRD$mun_id %in% treated, ]
 
-main_mun_PRD <- subset(df, select = c(year, mun_id, PRD_pct, PAN_pct, estado))
+main_mun_PRD <- subset(df, select = c(year, mun_id, PRD_margin, PAN_pct, estado))
 main_mun_PRD_not_treated <- main_mun_PRD[!main_mun_PRD$mun_id %in% treated_before, ]
 
 #merge datasets using adjacent municipalities index

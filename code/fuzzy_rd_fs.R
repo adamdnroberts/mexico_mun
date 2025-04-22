@@ -11,10 +11,7 @@ wide_budget_df$year <- wide_budget_df$ANIO
 
 #merge datasets
 df <- merge(big_df,wide_budget_df, by = c("mun_id", "year"))
-df <- subset(df, year <= 1996 & year >= 1994)
-
-DCdensity(df$PAN_pct, cutpoint = 0)
-DCdensity(df$PRD_pct, cutpoint = 0, ext.out = T)
+df <- subset(df, year <= 1997 & year >= 1995)
 
 #income (raw)
 rd0 <- RDestimate(ing0 ~ PAN_pct, cutpoint = 0.5, data = df)
@@ -81,18 +78,18 @@ bud_lead$pi_diff3 <- bud_lead$imp_lead3 - bud_lead$pct_imp
               #& estado != "Gunajuato" & estado != "Chihuahua" & estado != "Baja California" & estado != "Jalisco")
 
 df <- merge(big_df,bud_lead, by = c("mun_id", "year"))
-df <- subset(df, year>= 1994 & year <= 1996 
+df <- subset(df, year>= 1995 & year <= 1997
              #& estado!="Tlaxcala" 
              & (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PRD" | p2_name == "PRD")
 )
 
-robust_taxes0 <- rdrobust(y = df$pct_imp, x = df$PRD_pct, bwselect = "mserd")
+robust_taxes0 <- rdrobust(y = df$pct_imp, x = df$PRD_margin, bwselect = "mserd")
 summary(robust_taxes0)
-robust_taxes1 <- rdrobust(y = df$pi_diff1, x = df$PRD_pct,  bwselect = "mserd")
+robust_taxes1 <- rdrobust(y = df$pi_diff1, x = df$PRD_margin,  bwselect = "mserd")
 summary(robust_taxes1)
-robust_taxes2 <- rdrobust(y = df$pi_diff2, x = df$PRD_pct,  bwselect = "mserd")
+robust_taxes2 <- rdrobust(y = df$pi_diff2, x = df$PRD_margin,  bwselect = "mserd")
 summary(robust_taxes2)
-robust_taxes3 <- rdrobust(y = df$pi_diff3, x = df$PRD_pct,  bwselect = "mserd")
+robust_taxes3 <- rdrobust(y = df$pi_diff3, x = df$PRD_margin,  bwselect = "mserd")
 summary(robust_taxes3)
 
 
@@ -142,7 +139,7 @@ ci_data[1,6] <- NA
 # Create the plot
 taxation <- ggplot(ci_data, aes(x = Model, y = Coefficient)) +
   geom_point() +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "blue") +
+  geom_hline(yintercept = 0) +
   #geom_errorbar(aes(ymin = CI_Lower, ymax = CI_Upper), width = 0.2) +
   geom_errorbar(aes(ymin = CI_Lower90, ymax = CI_Upper90), width = 0.2, alpha = 0.5, color = "red") +
   theme_minimal() +
