@@ -36,8 +36,8 @@ for (n in n_values) {
   df_n$main_year <- as.factor(df_n$main_year)
   
   m90 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_margin, p = 1, 
-                     covs = cbind(df_n$main_year, df_n$main_estado,df_n$avg_dH), 
-                     bwselect = "cerrd", level= 90)
+                  covs = cbind(df_n$main_year, df_n$main_estado,df_n$avg_dH), 
+                  bwselect = "cerrd", level= 90)
   m95 <- rdrobust(y = df_n$change_pp_wt, x = df_n$PRD_margin, p = 1, 
                   covs = cbind(df_n$main_year, df_n$main_estado,df_n$avg_dH), 
                   bwselect = "cerrd", level= 95)
@@ -124,7 +124,9 @@ p <- ggplot(plot_data, aes(x = n, y = est, color = order)) +
   geom_hline(yintercept = 0, color = "black", alpha = 0.5) +
   geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0, position = position_dodge(width = 0.5)) +
   geom_point(position = position_dodge(width = 0.5)) +
-  labs(x = "Number of References in Weighted Average", y = "RD Estimate (90% CI)", 
+  labs(x = "Number of References in Weighted Average", 
+       y = "RD Estimate (90% CI)",
+       color = "Order",
        title = "") +
   theme_classic()
 
@@ -182,7 +184,8 @@ p <- ggplot(plot_data, aes(x = n, y = est, color = bw_type)) +
   geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0, position = position_dodge(width = 0.5)) +
   geom_point(position = position_dodge(width = 0.5)) +
   labs(x = "Number of References in Weighted Average", 
-       y = "RD Estimate (90% CI)", 
+       y = "RD Estimate (90% CI)",
+       color = "BW Estimator",
        title = "") +
   theme_classic() +
   scale_color_grey()

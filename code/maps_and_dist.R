@@ -9,7 +9,7 @@ library(ggplot2)
 library(sf)
 
 mex_sf <- read_sf("~/mexico_mun/raw/mun1995shp/Municipios_1995.shp")
-load("~/mexico_mun/data/full_dataset_mexelec.Rdata")
+load("~/mexico_mun/data/full_dataset_mexelec_pcts.Rdata")
 
 mex_sf$Municipio <- paste(mex_sf$CVE_ENT,mex_sf$CVE_MUN)
 
@@ -23,25 +23,27 @@ ggplot(df_geom) +
   #coord_sf(xlim = c(bbox["xmin"], bbox["xmax"]), ylim = c(bbox["ymin"], bbox["ymax"])) +
   theme_void()
 
-df_geom$PRDwin <- ifelse(!is.na(df_geom$PRD_pct),ifelse(df_geom$PRD_pct >= 0,1,0),NA)
-df_geom$PANwin <- ifelse(!is.na(df_geom$PAN_pct),ifelse(df_geom$PAN_pct >= 0.5,1,0),NA)
+df_geom$win <- ifelse(df_geom$p1_name == "PRI" | df_geom$p1_name == "PRD" | df_geom$p1_name == "PAN", df_geom$p1_name, ifelse(!is.na(df_geom$p1_name),"Other",NA))
 
-PAN_win_map <- ggplot(df_geom) +
-  geom_sf(color = "white", aes(geometry = geometry, fill = as.factor(PANwin))) +
-  labs(title = "Municipal Elections, 1995-1997", fill = "") +
-  scale_fill_manual( values = c("1" = "darkblue", "0" = "lightblue", "NA" = "gray"), labels = c("1" = "PAN Wins", "0" = "PAN Loses", "NA" = "Not Available"), na.value = "gray") +
+df_geom$PANwin <- ifelse(!is.na(df_geom$PAN_pct),ifelse(df_geom$PAN_margin >= 0,1,0),NA)
+
+
+
+
+df_geom_simp <- st_as_sf(df_geom)
+df_geom_simp <- rmapshaper::ms_simplify(df_geom_simp)
+
+mun_wins <- ggplot(df_geom_simp) +
+  #geom_sf(fill = NA, linewidth = 0.1, color = "white") +
+  geom_sf(alpha = 0.6, linewidth = 0.1, aes(fill = as.factor(win), color = as.factor(win))) +
+  labs(title = "Municipal Elections, 1995-1997", fill = "", color = "") +
+  scale_color_manual( values = c("PAN" = "darkblue", "PRD" = "goldenrod", "PRI" = "darkgreen", "Other" = "black", "NA" = "gray")) +
+  scale_fill_manual( values = c("PAN" = "darkblue", "PRD" = "goldenrod", "PRI" = "darkgreen", "Other" = "black", "NA" = "gray")) +
   theme_void() +
   theme(legend.position = "bottom")
+print(mun_wins)
 
-PRD_win_map <- ggplot(df_geom) +
-  geom_sf(color = "white", aes(geometry = geometry, fill = as.factor(PRDwin))) +
-  labs(title = "Municipal Elections, 1995-1997", fill = "") +
-  scale_fill_manual( values = c("1" = "yellow", "0" = "lightgreen", "NA" = "gray"), labels = c("1" = "PAN Wins", "0" = "PAN Loses", "NA" = "Not Available"), na.value = "gray") +
-  theme_void() +
-  theme(legend.position = "bottom")
-print(PRD_win_map)
-
-ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/3YP_Presentation_2_17_25/images/PAN_win_map.png", plot = PAN_win_map, width = 6, height = 4)
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP Final Tables and Figures Appendix/images/PAN_win_map.png", plot = mun_wins, width = 6, height = 4)
 
 # Assuming df is your dataframe
 test <- df %>%

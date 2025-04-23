@@ -4,6 +4,9 @@ library(rdrobust)
 library(ggplot2)
 library(data.table)
 
+load("~/mexico_mun/data/full_dataset_mexbudget.Rdata")
+wide_budget_df$year <- wide_budget_df$ANIO
+
 #rdrobust estimates
 
 wide_budget_df <- wide_budget_df %>% arrange(year)
@@ -22,37 +25,24 @@ bud_lead$pi_diff3 <- bud_lead$imp_lead3 - bud_lead$pct_imp
 #df <-  subset(big_df, year >= 1995 & year <= 1997)
 #& estado != "Gunajuato" & estado != "Chihuahua" & estado != "Baja California" & estado != "Jalisco")
 
-df <- merge(big_df,bud_lead, by = c("mun_id", "year"))
-df <- subset(df, year>= 1995 & year <= 1997
-             #& estado!="Tlaxcala" 
-             & (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PRD" | p2_name == "PRD")
-)
+#df <- merge(big_df,bud_lead, by = c("mun_id", "year"))
+#df <- subset(df, year>= 1995 & year <= 1997
+#             #& estado!="Tlaxcala" 
+#             & (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PRD" | p2_name == "PRD"#)
+#)
 
-robust_taxes0 <- rdrobust(y = df$pct_imp, x = df$PRD_margin, bwselect = "mserd")
-summary(robust_taxes0)
-robust_taxes1 <- rdrobust(y = df$pi_diff1, x = df$PRD_margin,  bwselect = "mserd")
-summary(robust_taxes1)
-robust_taxes2 <- rdrobust(y = df$pi_diff2, x = df$PRD_margin,  bwselect = "mserd")
-summary(robust_taxes2)
-robust_taxes3 <- rdrobust(y = df$pi_diff3, x = df$PRD_margin,  bwselect = "mserd")
-summary(robust_taxes3)
+load("~/mexico_mun/data/PRD_not_treated.Rdata")
 
-
-df <- merge(big_df,bud_lead, by = c("mun_id", "year"))
+df <- merge(main_mun_PRD_not_treated,bud_lead, by = c("mun_id", "year"))
 df <- subset(df, year>= 1995 & year <= 1997)
 
-robust_taxes1 <- rdrobust(y = df$pi_diff1, x = df$PAN_margin,  bwselect = "mserd")
-summary(robust_taxes1)
-robust_taxes2 <- rdrobust(y = df$pi_diff2, x = df$PAN_margin,  bwselect = "mserd")
-summary(robust_taxes2)
-robust_taxes3 <- rdrobust(y = df$pi_diff3, x = df$PAN_margin,  bwselect = "mserd")
-summary(robust_taxes3)
 
-robust_taxes1 <- rdrobust(y = df$pi_diff1, x = df$PRD_margin,  bwselect = "mserd")
+robust_taxes0 <- rdrobust(y = df$pi_diff1, x = df$PRD_margin,  bwselect = "cerrd")
+robust_taxes1 <- rdrobust(y = df$pi_diff1, x = df$PRD_margin,  bwselect = "cerrd")
 summary(robust_taxes1)
-robust_taxes2 <- rdrobust(y = df$pi_diff2, x = df$PRD_margin,  bwselect = "mserd")
+robust_taxes2 <- rdrobust(y = df$pi_diff2, x = df$PRD_margin,  bwselect = "cerrd")
 summary(robust_taxes2)
-robust_taxes3 <- rdrobust(y = df$pi_diff3, x = df$PRD_margin,  bwselect = "mserd")
+robust_taxes3 <- rdrobust(y = df$pi_diff3, x = df$PRD_margin,  bwselect = "cerrd")
 summary(robust_taxes3)
 
 #GRAPH RESULTS
