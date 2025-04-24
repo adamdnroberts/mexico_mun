@@ -57,19 +57,6 @@ cerm_PAN <- rdrobust(y = PAN_nn$change_pp_PAN, x = PAN_nn$PAN_margin, p = 1, cov
 #CREATE THE TABLE
 create_model_table(nc_PRD, cerm_PRD, nc_PAN, cerm_PAN, output_type = "latex")
 
-#Effect on other party
-#table PRD
-nc_PRD <- rdrobust(y = PRD_nn$change_pp_PAN, x = PRD_nn$PRD_pct, p = 1, bwselect = "cerrd", level = 90)
-
-cerm_PRD <- rdrobust(y = PRD_nn$change_pp_PAN, x = PRD_nn$PRD_pct, p = 1, covs = cbind(PRD_nn$main_year, PRD_nn$main_estado, PRD_nn$dH), bwselect = "cerrd", level = 90)
-
-#table PAN
-nc_PAN <- rdrobust(y = PAN_nn$change_pp_PRD, x = PAN_nn$PAN_pct, p = 1, bwselect = "cerrd", level = 90)
-
-cerm_PAN <- rdrobust(y = PAN_nn$change_pp_PRD, x = PAN_nn$PAN_pct, p = 1, covs = cbind(PAN_nn$main_year, PAN_nn$main_estado, PAN_nn$dH), bwselect = "cerrd", level = 90)
-
-create_model_table(nc_PRD, cerm_PRD, nc_PAN, cerm_PAN, output_type = "latex")
-
 #PLOTS
 bw <- rdbwselect(y = PAN_nn$change_pp_PAN, x = PAN_nn$PAN_pct, p = 1, covs = cbind(PAN_nn$main_year, PAN_nn$main_estado, PAN_nn$dH), bwselect = "cerrd")
 
@@ -135,49 +122,47 @@ ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP_draft/images/PRD_RD.
 
 #APPENDIX STUFF
 
+#Effect on other party
+#table PRD
+nc_PRD <- rdrobust(y = PRD_nn$change_pp_PAN, x = PRD_nn$PRD_margin, p = 1, bwselect = "cerrd", level = 90)
+
+cerm_PRD <- rdrobust(y = PRD_nn$change_pp_PAN, x = PRD_nn$PRD_margin, p = 1, covs = cbind(PRD_nn$main_year, PRD_nn$main_estado, PRD_nn$dH), bwselect = "cerrd", level = 90)
+
+#table PAN
+nc_PAN <- rdrobust(y = PAN_nn$change_pp_PRD, x = PAN_nn$PAN_margin, p = 1, bwselect = "cerrd", level = 90)
+
+cerm_PAN <- rdrobust(y = PAN_nn$change_pp_PRD, x = PAN_nn$PAN_margin, p = 1, covs = cbind(PAN_nn$main_year, PAN_nn$main_estado, PAN_nn$dH), bwselect = "cerrd", level = 90)
+
+create_model_table(nc_PRD, cerm_PRD, nc_PAN, cerm_PAN, output_type = "latex")
+
 ##EXAMINE SUPPLY SIDE
-df_rdd_PRD_new2 <- subset(df_rdd_PRD, ref_PRD_wins == 0 & main_estado == ref_estado)
-
-PRD_nns <- df_rdd_PRD_new2 %>%
-  group_by(mun_id) %>%
-  slice_head(n = 1)
-
-PRD_nns <- PRD_nns %>%
-  mutate(change_pp_PRD = ref_next_PRD_pct - ref_PRD_pct,
-         change_pp_PAN = ref_next_PAN_pct - ref_PAN_pct)
-
-PRD_nns$main_estado <- as.factor(PRD_nns$main_estado)
-PRD_nns$ref_estado <- as.factor(PRD_nns$ref_estado)
-
-df_rdd_PAN_new2 <- subset(df_rdd_PAN, ref_PAN_wins == 0 & main_estado == ref_estado)
-
-PAN_nns <- df_rdd_PAN_new2 %>%
-  group_by(mun_id) %>%
-  slice_head(n = 1)
-
-PAN_nns <- PAN_nns %>%
-  mutate(change_pp_PAN = ref_next_PAN_pct - ref_PAN_pct,
-         change_pp_PAN = ref_next_PAN_pct - ref_PAN_pct)
-
-PAN_nns$main_estado <- as.factor(PAN_nns$main_estado)
-PAN_nns$ref_estado <- as.factor(PAN_nns$ref_estado)
 
 #are they just dropping out in nearby places?
-PRD_nns$PRD_runs_next <- ifelse(PRD_nns$ref_next_PRD_pct > -0.5, 1, 0)
-summary(PRD_nns$PRD_runs_next)
+PRD_nn$PRD_runs_next <- ifelse(PRD_nn$ref_next_PRD_pct > 0, 1, 0)
+summary(PRD_nn$PRD_runs_next)
 
-PRD_runs <- rdrobust(y = PRD_nns$PRD_runs_next, x = PRD_nns$PRD_pct, p = 1, covs = cbind(PRD_nns$main_year, PRD_nns$main_estado,PRD_nns$dH), bwselect = "cerrd", level= 90)
+PRD_runs <- rdrobust(y = PRD_nn$PRD_runs_next, x = PRD_nn$PRD_margin, p = 1, covs = cbind(PRD_nn$main_year, PRD_nn$main_estado,PRD_nn$dH), bwselect = "cerrd", level= 90)
 summary(PRD_runs)
 
 create_model_table(PRD_runs)
 
-PRD_nns$ref_PRD_wins_t2 <- ifelse(PRD_nns$ref_next_PRD_pct > 0, 1, 0)
-PRD_wins <- rdrobust(y = PRD_nns$ref_PRD_wins_t2, x = PRD_nns$PRD_pct, p = 1, covs = cbind(PRD_nns$main_year, PRD_nns$main_estado,PRD_nns$dH), bwselect = "cerrd", level= 90)
+PRD_nn$ref_PRD_wins_t2 <- ifelse(PRD_nn$ref_next_PRD_margin > 0, 1, 0)
+summary(PRD_nn$ref_PRD_wins_t2)
+
+PRD_wins <- rdrobust(y = PRD_nn$ref_PRD_wins_t2, x = PRD_nn$PRD_margin, p = 1, 
+                     covs = cbind(PRD_nn$main_year,PRD_nn$main_estado,PRD_nn$dH), 
+                     bwselect = "cerrd", level= 90)
 summary(PRD_wins)
 
+create_model_table(PRD_wins)
+
+
 #PAN
-PAN_nn$PAN_runs_next <- ifelse(PAN_nn$ref_next_PAN_pct > -0.5, 1, 0)
+PAN_nn$PAN_runs_next <- ifelse(PAN_nn$ref_next_PAN_pct > 0, 1, 0)
 summary(PAN_nn$PAN_runs_next) #no muns where PAN doesn't run!
+
+PAN_runs <- rdrobust(y = PAN_nn$PAN_runs_next, x = PAN_nn$PAN_margin, p = 1, covs = cbind(PAN_nn$main_year, PAN_nn$main_estado,PAN_nn$dH), bwselect = "cerrd", level= 90)
+summary(PAN_runs)
 
 PAN_nn$ref_PAN_wins_t2 <- ifelse(PAN_nn$ref_next_PAN_pct > 0, 1, 0)
 PAN_wins <- rdrobust(y = PAN_nn$ref_PAN_wins_t2, x = PAN_nn$PAN_pct, p = 1, covs = cbind(PAN_nn$main_year, PAN_nn$main_estado,PAN_nn$dH), bwselect = "cerrd", level= 90)
