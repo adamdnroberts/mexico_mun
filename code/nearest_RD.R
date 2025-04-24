@@ -16,7 +16,8 @@ PRD_nn <- df_rdd_PRD_new %>%
 
 PRD_nn <- PRD_nn %>%
   mutate(change_pp_PRD = ref_next_PRD_pct - ref_PRD_pct,
-         change_pp_PAN = ref_next_PAN_pct - ref_PAN_pct)
+         change_pp_PAN = ref_next_PAN_pct - ref_PAN_pct,
+         change_pp_PRI = ref_next_PRI_pct - ref_PRI_pct)
 
 PRD_nn$main_estado <- as.factor(PRD_nn$main_estado)
 
@@ -124,9 +125,16 @@ ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP_draft/images/PRD_RD.
 
 #Effect on other party
 #table PRD
+
 nc_PRD <- rdrobust(y = PRD_nn$change_pp_PAN, x = PRD_nn$PRD_margin, p = 1, bwselect = "cerrd", level = 90)
 
 cerm_PRD <- rdrobust(y = PRD_nn$change_pp_PAN, x = PRD_nn$PRD_margin, p = 1, covs = cbind(PRD_nn$main_year, PRD_nn$main_estado, PRD_nn$dH), bwselect = "cerrd", level = 90)
+
+PRD_PRI <- rdrobust(y = PRD_nn$change_pp_PRI, x = PRD_nn$PRD_margin, p = 1, bwselect = "cerrd", level = 90)
+
+PRD_PRI_controls <- rdrobust(y = PRD_nn$change_pp_PRI, x = PRD_nn$PRD_margin, p = 1, covs = cbind(PRD_nn$main_year, PRD_nn$main_estado, PRD_nn$dH), bwselect = "cerrd", level = 90)
+
+create_model_table(PRD_PRI, PRD_PRI_controls,nc_PRD,cerm_PRD)
 
 #table PAN
 nc_PAN <- rdrobust(y = PAN_nn$change_pp_PRD, x = PAN_nn$PAN_margin, p = 1, bwselect = "cerrd", level = 90)

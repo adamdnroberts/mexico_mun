@@ -61,6 +61,8 @@ big_df <- big_df %>%
          next_PAN_pct = lead(PAN_pct, n = 1), 
          prev_PRD_pct = lag(PRD_pct, n = 1), 
          next_PRD_pct = lead(PRD_pct, n = 1),
+         prev_PRI_pct = lag(PRI_pct, n = 1), 
+         next_PRI_pct = lead(PRI_pct, n = 1),
          prev_PAN_margin = lag(PAN_margin, n = 1), 
          next_PAN_margin = lead(PAN_margin, n = 1), 
          prev_PRD_margin = lag(PRD_margin, n = 1), 
