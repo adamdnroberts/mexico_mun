@@ -66,6 +66,10 @@ big_df <- big_df %>%
          prev_PAN_margin = lag(PAN_margin, n = 1), 
          next_PAN_margin = lead(PAN_margin, n = 1), 
          prev_PRD_margin = lag(PRD_margin, n = 1), 
-         next_PRD_margin = lead(PRD_margin, n = 1))
+         next_PRD_margin = lead(PRD_margin, n = 1),
+         prev_total = lag(TOTAL, n = 1),
+         next_total = lead(TOTAL, n = 1))
+
+big_df$next_turnout_pct <- ifelse(big_df$TOTAL > 0, big_df$next_total/big_df$TOTAL, NA)
 
 save(big_df, file = "~/mexico_mun/data/full_dataset_mexelec_pcts.Rdata")

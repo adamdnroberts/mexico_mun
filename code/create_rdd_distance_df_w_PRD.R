@@ -21,7 +21,8 @@ treated_df_before <- subset(big_df, year <= 1994 & PRD_treat == 1)
 treated_before <- unique(treated_df_before$mun_id)
 
 #create smaller datasets for merge
-ref_PRD <- subset(df_ref, select = c(year, mun_id, next_PRD_pct, PRD_pct, next_PAN_pct, PAN_pct, estado, PRD_margin, next_PRD_margin, PRI_pct, next_PRI_pct))
+ref_PRD <- subset(df_ref, select = c(year, mun_id, next_PRD_pct, PRD_pct, next_PAN_pct, PAN_pct, estado, PRD_margin, 
+                                     next_PRD_margin, PRI_pct, next_PRI_pct, next_turnout_pct))
 ref_PRD_not_treated <- ref_PRD[!ref_PRD$mun_id %in% treated, ]
 
 main_mun_PRD <- subset(df, select = c(year, mun_id, PRD_pct, PRD_margin, next_PRD_margin, PAN_pct, estado))
@@ -34,7 +35,8 @@ ref2 <- merge(dH_df,ref_PRD_not_treated, by.x = c("neighbor"), by.y = c("mun_id"
 ref2 <- ref2 %>% rename(ref_PRD_pct = PRD_pct, ref_next_PRD_pct = next_PRD_pct, 
                         ref_PAN_pct = PAN_pct, ref_next_PAN_pct = next_PAN_pct, 
                         ref_estado = estado, ref_year = year, ref_PRD_margin = PRD_margin,
-                        ref_next_PRD_margin = next_PRD_margin, ref_PRI_pct = PRI_pct, ref_next_PRI_pct = next_PRI_pct)
+                        ref_next_PRD_margin = next_PRD_margin, ref_PRI_pct = PRI_pct, 
+                        ref_next_PRI_pct = next_PRI_pct, ref_next_turnout_pct = next_turnout_pct)
 ref2$ref_PRD_wins <- ifelse(ref2$ref_PRD_margin > 0, 1, 0)
 
 df_rdd <- merge(main_mun_PRD_not_treated,ref2, by.x = c("mun_id"), by.y = c("mun"))
