@@ -33,14 +33,23 @@ cerm_PAN <- rdrobust(y = PAN_nn$change_pp_PAN, x = PAN_nn$PAN_margin, p = 1, cov
 create_model_table(nc_PRD, cerm_PRD, nc_PAN, cerm_PAN, output_type = "latex")
 
 ### Effect on turnout
-PRD_nn <- subset(PRD_nn, ref_next_turnout_pct <= 3 & ref_next_turnout_pct > 0)
 
-nc_PRD <- rdrobust(y = PRD_nn$ref_next_turnout_pct, x = PRD_nn$PRD_margin, p = 1, bwselect = "mserd", level = 90)
-summary(nc_PRD)
+#remove outliers
+PRD_nn_turnout <- subset(PRD_nn, 
+                         ref_next_turnout_pct <= 70 & 
+                           ref_next_turnout_pct > 0)
 
-cerm_PRD <- rdrobust(y = PRD_nn$ref_next_turnout_pct, x = PRD_nn$PRD_margin, p = 1, 
-                     covs = cbind(PRD_nn$main_year, PRD_nn$main_estado, PRD_nn$dH), bwselect = "cerrd", level = 90)
-summary(cerm_PRD)
+PRD_turnout <- rdrobust(y = PRD_nn_turnout$ref_next_turnout_pct, x = PRD_nn_turnout$PRD_margin, p = 1, bwselect = "mserd", level = 90)
+summary(PRD_turnout)
+
+PRD_turnout_controls <- rdrobust(y = PRD_nn_turnout$ref_next_turnout_pct, x = PRD_nn_turnout$PRD_margin, p = 1, 
+                     covs = cbind(PRD_nn_turnout$main_year, PRD_nn_turnout$main_estado, PRD_nn_turnout$dH), bwselect = "cerrd", level = 90)
+summary(PRD_turnout_controls)
+
+test <- rdrobust(y = PRD_nn$ref_next_turnout_pct, x = PRD_nn$PRD_margin, p = 1, 
+                 covs = cbind(PRD_nn$main_year, PRD_nn$main_estado, PRD_nn$dH), 
+                 bwselect = "cerrd", level = 90)
+summary(test)
 
 rdplot(y = PRD_nn$ref_next_turnout_pct, x = PRD_nn$PRD_margin, p = 1, covs = cbind(PRD_nn$main_year, PRD_nn$main_estado, PRD_nn$dH))
 
