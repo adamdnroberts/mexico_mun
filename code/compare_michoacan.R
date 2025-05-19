@@ -24,8 +24,10 @@ summary(test)
 coefs <- test$coefficients
 filtered_coefs <- coefs[grepl("PRD_margin:PRD_treated:main_estado", names(coefs))]
 test <- as.data.frame(filtered_coefs)
-test$state <- gsub("PRD_margin:PRD_treated:main_estado", "", rownames(filtered_coefs))
-test$coef <- test$`coefs[grepl("PRD_margin:PRD_treated:main_estado", names(coefs))]`
+test$state <- gsub("PRD_margin:PRD_treated:main_estado", "", 
+                   names(filtered_coefs)
+                   )
+test$coef <- test$filtered_coefs
 test$`coefs[grepl("PRD_margin:PRD_treated:main_estado", names(coefs))]` <- NULL
 rownames(test) <- NULL
 
