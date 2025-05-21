@@ -15,12 +15,18 @@ wide_budget_df$pct_imp <- wide_budget_df$Ingresos.Capítulo.Impuestos/wide_budge
 
 bud_lead <- wide_budget_df %>%
   group_by(mun_id) %>%
-  mutate(imp_lead1 = lead(pct_imp, n = 1), imp_lead2 = lead(pct_imp, n = 2), imp_lead3 = lead(pct_imp, n = 3)) %>%
+  mutate(imp_lead1 = lead(pct_imp, n = 1), imp_lead2 = lead(pct_imp, n = 2), imp_lead3 = lead(pct_imp, n = 3),
+         taxes1 = lead(Ingresos.Capítulo.Impuestos, n = 1), taxes2 = lead(Ingresos.Capítulo.Impuestos, n = 2), 
+         taxes3 = lead(Ingresos.Capítulo.Impuestos, n = 3)) %>%
   ungroup()
 
 bud_lead$pi_diff1 <- bud_lead$imp_lead1 - bud_lead$pct_imp
 bud_lead$pi_diff2 <- bud_lead$imp_lead2 - bud_lead$pct_imp
 bud_lead$pi_diff3 <- bud_lead$imp_lead3 - bud_lead$pct_imp
+
+bud_lead$tax_increase1 <- (bud_lead$taxes1 - bud_lead$Ingresos.Capítulo.Impuestos)/bud_lead$Ingresos.Capítulo.Impuestos
+bud_lead$tax_increase2 <- (bud_lead$taxes2 - bud_lead$Ingresos.Capítulo.Impuestos)/bud_lead$Ingresos.Capítulo.Impuestos
+bud_lead$tax_increase3 <- (bud_lead$taxes3 - bud_lead$Ingresos.Capítulo.Impuestos)/bud_lead$Ingresos.Capítulo.Impuestos
 
 #df <-  subset(big_df, year >= 1995 & year <= 1997)
 #& estado != "Gunajuato" & estado != "Chihuahua" & estado != "Baja California" & estado != "Jalisco")
@@ -90,3 +96,14 @@ taxation <- ggplot(ci_data, aes(x = Model, y = Coefficient)) +
 print(taxation)
 
 ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP Final Tables and Figures Appendix/images/taxation.png", plot = taxation, width = 6, height = 4)
+
+#TAX INCREASES
+df2 <- subset(df, tax_increase1 < 200)
+
+tax_increase0 <- rdrobust(y = df2$tax_increase1, x = df2$PRD_margin,  bwselect = "cerrd")
+tax_increase1 <- rdrobust(y = df2$tax_increase1, x = df2$PRD_margin,  bwselect = "cerrd")
+summary(tax_increase1)
+tax_increase2 <- rdrobust(y = df2$tax_increase2, x = df2$PRD_margin,  bwselect = "cerrd")
+summary(tax_increase2)
+tax_increase3 <- rdrobust(y = df2$tax_increase3, x = df2$PRD_margin,  bwselect = "cerrd")
+summary(tax_increase3)
