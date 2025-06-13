@@ -1,23 +1,25 @@
 library(dplyr)
 
+
+
 load("~/mexico_mun/data/pairwise_km.Rdata")
 
-load("~/mexico_mun/data/full_dataset_mexelec_pcts.Rdata")
-big_df$mun_id <- gsub(" ", "", big_df$Municipio)
+load("~/mexico_mun/data/mexico_municipal_elections.Rdata")
+mexico_municipal_elections$mun_id <- gsub(" ", "", mexico_municipal_elections$Municipio)
 
-df <- subset(big_df, year>= 1995 & year <= 1997 &  (p1_name == "PRI" | p2_name == "PRI"))
+df <- subset(mexico_municipal_elections, year>= 1995 & year <= 1997 &  (p1_name == "PRI" | p2_name == "PRI"))
 
 #df <- df[, colSums(is.na(df)) != nrow(df)] No coalitions in this!
 
-df_ref <- subset(big_df, year>= 1995 & year <= 1997 
+df_ref <- subset(mexico_municipal_elections, year>= 1995 & year <= 1997 
                  #& estado!="Tlaxcala" 
                  #& (p1_name == "PRI" | p2_name == "PRI") & (p1_name == "PRD" | p2_name == "PRD")
 )
 
-treated_df <- subset(big_df, year <= 1997 & PRD_treat == 1)
+treated_df <- subset(mexico_municipal_elections, year <= 1997 & PRD_treat == 1)
 treated <- unique(treated_df$mun_id)
 
-treated_df_before <- subset(big_df, year <= 1994 & PRD_treat == 1)
+treated_df_before <- subset(mexico_municipal_elections, year <= 1994 & PRD_treat == 1)
 treated_before <- unique(treated_df_before$mun_id)
 
 #create smaller datasets for merge
