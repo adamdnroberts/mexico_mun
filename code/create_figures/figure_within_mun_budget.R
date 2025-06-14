@@ -4,7 +4,7 @@ library(rdrobust)
 library(ggplot2)
 library(data.table)
 
-load("~/mexico_mun/data/full_dataset_mexbudget.Rdata")
+load("~/sismos_y_media/data/full_dataset_efipem.Rdata")
 wide_budget_df$year <- wide_budget_df$ANIO
 
 #rdrobust estimates
@@ -38,7 +38,6 @@ load("~/mexico_mun/data/PRD_not_treated.Rdata")
 
 df <- merge(main_mun_PRD_not_treated, budget, by = c("mun_id", "year"))
 df <- subset(df, year>= 1995 & year <= 1997)
-
 
 robust_taxes1 <- rdrobust(y = df$pi_diff1, x = df$PRD_margin,  bwselect = "cerrd")
 robust_taxes2 <- rdrobust(y = df$pi_diff2, x = df$PRD_margin,  bwselect = "cerrd")
@@ -85,13 +84,13 @@ PRD_gov <- ggplot(plot_data, aes(x = Period, y = Coefficient, color = Outcome)) 
                 width = 0, linewidth = 0.5, position = position_dodge(width = 0.5)) +
   geom_errorbar(aes(ymin = CI_Lower90, ymax = CI_Upper90), 
                 width = 0, linewidth = 3, alpha = 0.4, position = position_dodge(width = 0.5)) +
-  theme_minimal() +
+  theme_classic() +
   labs(title = "",
        subtitle = "",
        x = "",
        y = "Change in Outcome as % of Expenditures",
        caption = "Thick bars: 90% CI, Thin bars: 95% CI") +
-  theme(legend.position = c(0.1, 0.1),
+  theme(legend.position = c(0.01, 0.01),
         legend.justification = c(0, 0),
         legend.background = element_rect(fill = "white", color = NA))
 
