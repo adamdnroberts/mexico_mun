@@ -25,7 +25,7 @@ all_states_final$mun_id <- sprintf("%05d", all_states_final$mun_code)
 load("C:/Users/adamd/Documents/mexico_mun/data/nearest_neighbor_PRD.Rdata")
 
 # Load precinct distance data ----
-precinct_distances_mexico <- read.csv("~/new_one_I_think.csv")
+precinct_distances_mexico <- read.csv("~/mexico_mun/raw/precinct_distances_mexico.csv")
 
 # =============================================================================
 # 2. SAMPLE SELECTION AND FILTERING
@@ -76,12 +76,12 @@ stable_municipalities <- matched_precincts %>%
   ungroup()
 
 # Final municipality list for analysis ----
-muns_to_use <- unique(stable_municipalities$mun_id)
+stable_muns <- unique(stable_municipalities$mun_id)
 
 # Create final analysis dataset ----
 analysis_data <- subset(all_states_final, 
                         year <= 2000 & 
-                          mun_id %in% muns_to_use & 
+                          mun_id %in% stable_muns & 
                           mun_id %in% nn_muns)
 
 # =============================================================================
@@ -102,7 +102,7 @@ nearest_municipality_by_precinct <- precinct_with_distances %>%
   filter(mun_id != mun_seat_id) %>%  # Exclude same municipality
   group_by(mun_id, SECCION) %>%
   arrange(Distance) %>%
-  slice(1) %>%  # Keep closest municipality
+  slice(1) %>%  # Keep closest municipal seat
   ungroup()
 
 # =============================================================================
@@ -127,12 +127,26 @@ final_merged_data <- final_merged_data %>%
     mun_pair_id = paste0(mun_id, mun_seat_id)           # Municipality pair ID
   )
 
+final_merged_data$dist_standardized <- scale(final_merged_data$Distance) 
+final_merged_data$treatment_times_post <- final_merged_data$PRD_treat * final_merged_data$post_treatment
+
+save(final_merged_data, file = "~/mexico_mun/data/precinct_merged_data.Rdata")
+
 # =============================================================================
 # 6. REGRESSION ANALYSIS
 # =============================================================================
 
+result <- t.test(share_PRD_valid_vote ~ PRD_treat, data = subset(final_merged_data, post_treatment == 0))
+result
+
+result2 <- t.test(share_PRD_registered_voters ~ PRD_treat, data = subset(final_merged_data, post_treatment == 0))
+result2
+
+result3 <- t.test(share_PAN_registered_voters ~ PRD_treat, data = subset(final_merged_data, post_treatment == 0))
+result3
+
 # Model 1: PRD vote share with municipality and year fixed effects ----
-model_1 <- feols(share_PRD_valid_vote ~ PRD_treat * post_treatment + Distance | 
+model_1 <- feols(share_PRD_valid_vote ~ treatment_times_post + Distance | 
                    mun_id + mun_seat_id + year.x, 
                  cluster = "precinct", 
                  data = final_merged_data)
@@ -141,7 +155,7 @@ print("=== Model 1: PRD Vote Share (Municipality FE) ===")
 etable(model_1)
 
 # Model 2: PRD vote share with municipality pair fixed effects ----
-model_2 <- feols(share_PRD_valid_vote ~ PRD_treat * post_treatment + Distance | 
+model_2 <- feols(share_PRD_valid_vote ~ treatment_times_post + Distance | 
                    mun_pair_id + year.x, 
                  cluster = "precinct", 
                  data = final_merged_data)
@@ -149,23 +163,56 @@ model_2 <- feols(share_PRD_valid_vote ~ PRD_treat * post_treatment + Distance |
 print("=== Model 2: PRD Vote Share (Municipality Pair FE) ===")
 etable(model_2)
 
-# Model 3: PRD registered voters ----
-model_3 <- feols(share_PRD_registered_voters ~ PRD_treat * post_treatment + Distance | 
+model_3 <- feols(share_PRD_registered_voters ~ treatment_times_post + Distance | 
                    mun_id + mun_seat_id + year.x, 
                  cluster = "precinct", 
                  data = final_merged_data)
 
-print("=== Model 3: PRD Registered Voters ===")
 summary(model_3)
 
-# Model 3: PRD registered voters ----
-model_4 <- feols(turnout ~ PRD_treat * post_treatment + Distance | 
+model_4 <- feols(share_PRD_registered_voters ~ treatment_times_post + dist_standardized | 
+                   mun_pair_id + year.x, 
+                 cluster = "precinct", 
+                 data = final_merged_data)
+
+etable(model_4, digits = "r3")
+
+# Model 5: turnout ----
+model_5 <- feols(turnout ~ treatment_times_post + Distance | 
                    mun_id + mun_seat_id + year.x, 
                  cluster = "precinct", 
                  data = final_merged_data)
 
-print("=== Model 4: Turnout ===")
-summary(model_4)
+etable(model_5, digits = "r3")
+
+
+model_6 <- feols(share_PAN_valid_vote ~ treatment_times_post * dist_standardized | 
+                   mun_pair_id + year.x, 
+                 cluster = "precinct", 
+                 data = final_merged_data)
+
+etable(model_6, digits = "r3")
+
+model_7 <- feols(share_PAN_registered_voters ~ treatment_times_post + dist_standardized | 
+                   mun_pair_id + year.x, 
+                 cluster = "precinct", 
+                 data = final_merged_data)
+
+etable(model_7, digits = "r3")
+
+model_8 <- feols(share_PRI_valid_vote ~ treatment_times_post + dist_standardized | 
+                   mun_pair_id + year.x, 
+                 cluster = "precinct", 
+                 data = final_merged_data)
+
+etable(model_8, digits = "r3")
+
+model_9 <- feols(share_PRI_registered_voters ~ treatment_times_post + dist_standardized | 
+                   mun_pair_id + year.x, 
+                 cluster = "precinct", 
+                 data = final_merged_data)
+
+etable(model_9, digits = "r3")
 
 # =============================================================================
 # 7. SUMMARY STATISTICS AND DIAGNOSTICS
