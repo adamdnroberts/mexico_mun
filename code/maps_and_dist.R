@@ -106,4 +106,6 @@ summary(mun_ll_full$LON_DECIMAL)
 mun_ll <- subset(mun_ll_full, !is.na(LAT_DECIMAL) | !is.na(LON_DECIMAL)) #need to find out how to get long/lat of the mexico city municipalities
 
 save(mun_ll, file = "~/mexico_RD/mun_ll.Rdata")
+write.csv(mun_ll, file = "~/mexico_mun/data/municipal_seat_long_lat.csv", row.names = FALSE)
+
 

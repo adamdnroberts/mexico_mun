@@ -1,0 +1,13 @@
+Steps for creating nearest municipalities to precincts!
+
+In QGIS, open the Distance Matrix Tool:
+	Go to Processing > Toolbox and search for Distance Matrix.
+
+Configure the Tool:
+	Set the Input Layer to centroids (the centroids of the precinct shapefile).
+	Set the Target Layer to municipal_seat_lat_long.
+	Choose "Use only the nearest (k) target points" and set k = 2.
+	Select the output format (e.g., CSV or memory layer).
+
+Analyze the Results:
+	The output will list each point and its two nearest neighbors, along with the distances.
