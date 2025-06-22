@@ -88,7 +88,7 @@ create_model_table(PRD_within, PAN_within)
 
 ##Nearest Neighbor Effect on Turnout##
 
-nearest_neighbor_PRD_no_outliers <- subset(nearest_neighbor_PRD, ref_next_turnout_pct <= 2 & ref_next_turnout_pct > 0)
+nearest_neighbor_PRD_no_outliers <- subset(nearest_neighbor_PRD, ref_next_turnout_pct <= 10 & ref_next_turnout_pct > 0)
 
 #PRD models
 prd_non_covariate_turnout <- rdrobust(y = nearest_neighbor_PRD_no_outliers$ref_next_turnout_pct, x = nearest_neighbor_PRD_no_outliers$PRD_margin, p = 1, 
