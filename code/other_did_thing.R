@@ -4,43 +4,100 @@ library(ggplot2)
 library(fixest)
 library(data.table)
 
-load("~/mexico_mun/data/jaccard_similarity_AM_FM.Rdata")
 load("~/mexico_mun/data/mexico_municipal_elections.Rdata")
-load("~/mexico_mun/data/rdd_PRD_subset.Rdata")
-load("C:/Users/adamd/Documents/mexico_mun/data/nearest_neighbor_PRD.Rdata")
+load("~/mexico_mun/data/pairwise_km.Rdata")
 
-new1 <- rdd_PRD_subset %>% inner_join(js, by = join_by("mun_id" == "mun_id", "neighbor" == "ref_mun_id"))
-new2 <- nearest_neighbor_PRD %>% inner_join(js, by = join_by("mun_id" == "mun_id", "neighbor" == "ref_mun_id"))
+setDT(mexico_municipal_elections)
 
-new <- new1 %>% filter(main_estado == ref_estado)
+df <- mexico_municipal_elections[year <= 2000 & 
+                                   (p1_name == "PRI" | p2_name == "PRI")]
 
-new$change_pct_PRD <- new$ref_PRD_pct - new$ref_next_PRD_pct
-new$change_pct_PRI <- new$ref_PRI_pct - new$ref_next_PRI_pct
-new$change_pct_PAN <- new$ref_PAN_pct - new$ref_next_PAN_pct
-new$PRD_treat <- as.numeric(new$PRD_margin > 0)
-new$above_median_js <- ifelse(new$js >= mean(new$js), 1, 0)
-new$PRD_treat_times_js <- new$PRD_treat * new$js
+ref_muns <- mexico_municipal_elections[year <= 2000]
+
+treated_muns <- mexico_municipal_elections[year <= 1997 & PRD_treat == 1, 
+                                           unique(mun_id)]
+treated_muns_before <- mexico_municipal_elections[year <= 1994 & PRD_treat == 1, 
+                                                  unique(mun_id)]
+
+# Define column selections once
+ref_cols <- c("year", "mun_id", "PRD_pct", 
+              "PAN_pct", "estado", "PRD_margin", 
+              "PRI_pct")
+
+main_cols <- c("year", "mun_id", "PRD_pct", "PRI_pct", "PAN_pct", "PRD_margin", "estado")
+
+# Create filtered datasets with proper exclusions
+ref_PRD_not_treated <- ref_muns[!mun_id %in% treated_muns, ..ref_cols]
+main_mun_PRD_not_treated <- df[!mun_id %in% treated_muns_before, ..main_cols]
+
+ref_merged <- ref_PRD_not_treated %>% 
+  left_join(dH_df, 
+            by = join_by("mun_id" == "neighbor")) %>%
+  rename(ref_mun_id = mun_id)
+
+# Rename columns in bulk using setnames for data.table
+old_names <- c("PRD_pct", "PAN_pct", "estado", "PRD_margin", "PRI_pct")
+
+new_names <- c("ref_PRD_pct", "ref_PAN_pct", "ref_estado", "ref_PRD_margin", "ref_PRI_pct")
+
+setnames(ref_merged, old_names, new_names)
+
+# Final merge and variable creation
+did <- main_mun_PRD_not_treated %>% inner_join(ref_merged, 
+                        by = join_by("mun_id" == "mun", "year")) %>%
+  filter(estado == ref_estado & estado != "Oaxaca")
+
+#rm(list = ls()[ls() != "did"])
+
+did$t <- NA
+did$t[did$year == 1985] <- -4
+did$t[did$year >= 1986 & did$year <= 1988] <- -3
+did$t[did$year >= 1989 & did$year <= 1991] <- -2
+did$t[did$year >= 1992 & did$year <= 1994] <- -1
+did$t[did$year >= 1995 & did$year <= 1997] <- 0
+did$t[did$year >= 1998 & did$year <= 2000] <- 1
+
+did$t_factor <- as.factor(did$t)
+did$t_factor <- relevel(did$t_factor, ref = "0")
+
+library(stringr)
+load("~/mexico_mun/data/jaccard_similarity_AM_FM.Rdata")
+
+js$estado_js <- str_sub(js$mun_id, 1, 2)
+js$ref_estado_js <- str_sub(js$ref_mun_id, 1, 2)
+
+js <- js %>% filter(estado_js == ref_estado_js 
+                    & mun_id %in% unique(did$mun_id) 
+                    & ref_mun_id %in% unique(did$ref_mun_id))
+
+new <- did %>% left_join(js, by = join_by("mun_id", "ref_mun_id"))
+
+treated <- unique(new$mun_id[new$PRD_margin > 0])
+new$PRD_treat <- as.numeric(new$mun_id %in% treated)
+
 new$dist_std <- scale(new$dH)
+new$pair_id <- paste(new$mun_id, new$ref_mun_id)
 
 #base model
-m1 <- feols(change_pct_PRD ~ PRD_treat*js + dist_std 
-            | mun_id,
-            cluster = "neighbor",
+m1 <- feols(ref_PRD_pct ~ PRD_treat*js*t_factor + dH + PRD_margin
+            | pair_id + year,
+            cluster = "ref_mun_id",
             data = new)
+
+etable(m1, digits = "r3")
+
+m2 <- feols(ref_PRD_pct ~ PRD_treat*js*t_factor + dH + PRD_margin
+            | pair_id + year,
+            cluster = "ref_mun_id",
+            data = subset(new, t >= 0))
+
+etable(m2, digits = "r3")
 
 m2 <- feols(change_pct_PRD ~ PRD_treat*js + dist_std
-              + ref_PRD_pct + ref_PRI_pct + ref_PAN_pct
-              | mun_id,
-              cluster = "neighbor",
-              data = new)
-
-m2.5 <- feols(change_pct_PRD ~ PRD_treat*js + dist_std
-            + ref_PRD_pct
+            + ref_PRD_pct + ref_PRI_pct + ref_PAN_pct
             | mun_id,
             cluster = "neighbor",
             data = new)
-
-etable(m2, m2.5, digits = "r3")
 
 m3 <- feols(change_pct_PRI ~ PRD_treat*js + dist_std
             | mun_id,
@@ -48,24 +105,10 @@ m3 <- feols(change_pct_PRI ~ PRD_treat*js + dist_std
             data = new)
 
 m4 <- feols(change_pct_PRI ~ PRD_treat*js + dist_std
-              + ref_PRI_pct
-            | mun_id,
-            cluster = "neighbor",
-            data = new)
-
-m4.1 <- feols(change_pct_PRI ~ PRD_treat*js + dist_std
-            + ref_PRD_pct + ref_PRI_pct
-            | mun_id,
-            cluster = "neighbor",
-            data = new)
-
-m4.2 <- feols(change_pct_PRI ~ PRD_treat*js + dist_std
             + ref_PRD_pct + ref_PRI_pct + ref_PAN_pct
             | mun_id,
             cluster = "neighbor",
             data = new)
-
-etable(m4, m4.1, m4.2, digits = "r3")
 
 m5 <- feols(change_pct_PAN ~ PRD_treat*js + dH 
             | mun_id,
@@ -73,7 +116,7 @@ m5 <- feols(change_pct_PAN ~ PRD_treat*js + dH
             data = new)
 
 m6 <- feols(change_pct_PAN ~ PRD_treat*js + dH 
-            + ref_PAN_pct
+            + ref_PRD_pct + ref_PRI_pct + ref_PAN_pct
             | mun_id,
             cluster = "neighbor",
             data = new)

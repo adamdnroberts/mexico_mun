@@ -69,7 +69,7 @@ shapefile_precinct_counts <- as.data.frame(mex_sf) %>%
 # Match precinct counts between data sources ----
 matched_municipalities <- left_join(precinct_counts_2000, 
                                shapefile_precinct_counts, 
-                               by = "precinct") %>%
+                               by = "mun_id") %>%
   filter(n_precincts == n_precincts_shapefile)  # Keep only perfect matches
 
 # Keep municipalities with exactly 2 years of data ----
@@ -115,12 +115,12 @@ nearest_municipality_by_precinct <- precinct_with_distances %>%
 # Merge analysis data with nearest municipality information ----
 merged_step1 <- left_join(analysis_data, 
                           nearest_municipality_by_precinct, 
-                          by = c("precinct", "precinct" = "SECCION"))
+                          by = c("mun_id", "precinct" = "SECCION"))
 
 # Merge with PRD margin data ----
 merged_step2 <- left_join(merged_step1, 
                                nearest_neighbor_PRD, 
-                               by = c("mun_seat_id" = "precinct"))
+                               by = c("mun_seat_id" = "mun_id"))
 
 # Create treatment and time variables ----
 final_merged_data <- merged_step2 %>%

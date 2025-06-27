@@ -67,13 +67,6 @@ new <- merge(new0, js, by = c("mun_id", "ref_mun_id"))
 new$change_pct_PRD <- new$ref_PRD_pct - new$ref_next_PRD_pct
 new$PRD_treat <- ifelse(new$mun_id %in% treated_muns_did, 1, 0)
 
-result <- t.test(share_PRD_valid_vote ~ PRD_treat, data = subset(new, year <= ))
-result
-
-ggplot(new) +
-  geom_smooth(aes(x = year, y = change_pct_PRD)) +
-  facet_wrap(~PRD_treat)
-
 new$t <- NA
 new$t[new$year == 1985] <- -3
 new$t[new$year >= 1986 & new$year <= 1988] <- -2
@@ -81,9 +74,14 @@ new$t[new$year >= 1989 & new$year <= 1991] <- -1
 new$t[new$year >= 1992 & new$year <= 1994] <- 0
 new$t[new$year >= 1995 & new$year <= 1997] <- 1
 
-#no outcome audit
-m1 <- feols(change_pct_PRD ~ PRD_treat*js*as.factor(t) + dH #+ PRD_treat*js^2 
-            | mun_id + year,
+new$t_factor <- as.factor(new$t)
+new$t_factor <- relevel(new$t_factor, ref = "0")
+
+new$mun_year <- paste(new$mun_id, new$year)
+
+m1 <- feols(change_pct_PRD ~ PRD_treat*js*t_factor + dH 
+            + ref_PRD_pct # + ref_PRI_pct + ref_PAN_pct
+            | mun_id + year + mun_year ,
             cluster = "ref_mun_id",
             data = new)
 etable(m1, digits = "r3")
@@ -94,23 +92,36 @@ colnames(plot_data) <- c("est","se")
 plot_data$vars <- row.names(plot_data)
 
 #CIs
-plot_data$cihigh <- plot_data$est + 1.96*plot_data$se
-plot_data$cilow <- plot_data$est - 1.96*plot_data$se
+plot_data$ci_95high <- plot_data$est + 1.96*plot_data$se
+plot_data$ci_95low <- plot_data$est - 1.96*plot_data$se
+
+plot_data$ci_90high <- plot_data$est + 1.645*plot_data$se
+plot_data$ci_90low <- plot_data$est - 1.645*plot_data$se
 
 # Filter the data frame
 plot_data <- plot_data %>%
-  filter(vars %in% c("PRD_treat:js:as.factor(t)-2",
-                     "PRD_treat:js:as.factor(t)-1",
-                     "PRD_treat:js:as.factor(t)0",
-                     "PRD_treat:js:as.factor(t)1")) %>%
-  mutate(t = as.numeric(str_extract(vars, "(?<=\\(t\\))-?\\d+")))
+  filter(vars %in% c("PRD_treat:js:t_factor-3",
+                     "PRD_treat:js:t_factor-2",
+                     "PRD_treat:js:t_factor-1",
+                     "PRD_treat:js:t_factor1")) %>%
+  mutate(t = as.numeric(str_extract(vars, "-?\\d+")))
+
+plot_data <- rbind(plot_data, c(0, NA, NA, NA, NA, NA, NA, 0))
 
 p <- ggplot(plot_data, aes(x = t, y = est)) +
   geom_hline(yintercept = 0, color = "black") +
-  geom_errorbar(aes(ymin = cilow, ymax = cihigh), width = 0) +
-  geom_point(position = position_dodge(width = -0.5)) +
-  labs(x = "", y = "Coefficient and 95% CI", title = "Model Coefficients") +
+  geom_vline(xintercept = 0, color = "red", linetype = 2) +
+  geom_errorbar(aes(ymin = ci_95low, ymax = ci_95high), 
+                width = 0, linewidth = 0.5) +
+  geom_errorbar(aes(ymin = ci_90low, ymax = ci_90high), 
+                width = 0, linewidth = 3, alpha = 0.4) +
+  geom_point() +
+  geom_line() +
+  labs(x = "", y = "Coefficient and 95% CI", title = "Parallel Trends Test") +
   theme_minimal()
 print(p)
 
-linearHypothesis(m1, "js = PRD_treat:js")
+linearHypothesis(m1, c("PRD_treat:js:t_factor-2 = 0", "PRD_treat:js:t_factor-1 = 0", "PRD_treat:js:t_factor0 = 0"))
+linearHypothesis(m1, "PRD_treat:js:as.factor(t)-2 = PRD_treat:js:as.factor(t)1")
+linearHypothesis(m1, "PRD_treat:js:as.factor(t)-1 = PRD_treat:js:as.factor(t)1")
+linearHypothesis(m1, "PRD_treat:js:as.factor(t)0 = PRD_treat:js:as.factor(t)1")
