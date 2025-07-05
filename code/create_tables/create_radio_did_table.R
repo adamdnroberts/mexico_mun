@@ -18,69 +18,51 @@ new$change_pct_PRD <- new$ref_PRD_pct - new$ref_next_PRD_pct
 new$change_pct_PRI <- new$ref_PRI_pct - new$ref_next_PRI_pct
 new$change_pct_PAN <- new$ref_PAN_pct - new$ref_next_PAN_pct
 new$PRD_treat <- as.numeric(new$PRD_margin > 0)
-new$above_median_js <- ifelse(new$js >= mean(new$js), 1, 0)
+new$above_median_js <- ifelse(new$js >= median(new$js), 1, 0)
 new$PRD_treat_times_js <- new$PRD_treat * new$js
 new$dist_std <- scale(new$dH)
 
 #base model
-m1 <- feols(change_pct_PRD ~ PRD_treat*js + dist_std 
+m1 <- feols(change_pct_PRD ~ PRD_treat*above_median_js + dist_std 
             | mun_id,
             cluster = "neighbor",
             data = new)
 
-m2 <- feols(change_pct_PRD ~ PRD_treat*js + dist_std
+m2 <- feols(change_pct_PRD ~ PRD_treat*above_median_js + dist_std
               + ref_PRD_pct + ref_PRI_pct + ref_PAN_pct
               | mun_id,
               cluster = "neighbor",
               data = new)
 
-m2.5 <- feols(change_pct_PRD ~ PRD_treat*js + dist_std
-            + ref_PRD_pct
+m3 <- feols(change_pct_PRI ~ PRD_treat*above_median_js + dist_std
             | mun_id,
             cluster = "neighbor",
             data = new)
 
-etable(m2, m2.5, digits = "r3")
-
-m3 <- feols(change_pct_PRI ~ PRD_treat*js + dist_std
-            | mun_id,
-            cluster = "neighbor",
-            data = new)
-
-m4 <- feols(change_pct_PRI ~ PRD_treat*js + dist_std
-              + ref_PRI_pct
-            | mun_id,
-            cluster = "neighbor",
-            data = new)
-
-m4.1 <- feols(change_pct_PRI ~ PRD_treat*js + dist_std
-            + ref_PRD_pct + ref_PRI_pct
-            | mun_id,
-            cluster = "neighbor",
-            data = new)
-
-m4.2 <- feols(change_pct_PRI ~ PRD_treat*js + dist_std
+m4 <- feols(change_pct_PRI ~ PRD_treat*above_median_js + dist_std
             + ref_PRD_pct + ref_PRI_pct + ref_PAN_pct
             | mun_id,
             cluster = "neighbor",
             data = new)
 
-etable(m4, m4.1, m4.2, digits = "r3")
-
-m5 <- feols(change_pct_PAN ~ PRD_treat*js + dH 
+m5 <- feols(change_pct_PAN ~ PRD_treat*above_median_js + dist_std
             | mun_id,
             cluster = "neighbor",
             data = new)
 
-m6 <- feols(change_pct_PAN ~ PRD_treat*js + dH 
-            + ref_PAN_pct
+m6 <- feols(change_pct_PAN ~ PRD_treat*above_median_js + dist_std 
+            + ref_PRD_pct + ref_PRI_pct + ref_PAN_pct
             | mun_id,
             cluster = "neighbor",
             data = new)
 
-etable(m1, m2, m3, m4, m5, m6, digits = "r3")
+etable(m1, m2, m3, m4, m5, m6, digits = "r3", digits.stats = "r3", tex = T)
 
 linearHypothesis(m2, "js = PRD_treat:js")
+
+
+# Plot the smooth terms
+plot(g, pages = 1)
 
 #BOOTSTRAP
 rm(list = ls()[ls() != "new"])
@@ -107,7 +89,7 @@ for (i in 1:B) {
     new[new$mun_id == x, ]
   })
   df = do.call(rbind, df_list)
-  m = feols(change_pct_PRD ~ PRD_treat*js + dist_std 
+  m = feols(change_pct_PRD ~ PRD_treat*above_median_js + dist_std 
             + ref_PRD_pct + ref_PRI_pct + ref_PAN_pct
             | mun_id,
             lean = TRUE,

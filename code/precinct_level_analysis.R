@@ -142,94 +142,99 @@ save(final_merged_data, file = "~/mexico_mun/data/precinct_merged_data.Rdata")
 # 6. REGRESSION ANALYSIS
 # =============================================================================
 
+final_merged_data$precinct_id <- paste0(final_merged_data$mun_id, 
+                                        "_",
+                                        final_merged_data$precinct)
+
+final_merged_data$precinct_mun_pair <- paste0(final_merged_data$precinct_id, 
+                                        "_",
+                                        final_merged_data$mun_seat_id)
+
 result <- t.test(share_PRD_valid_vote ~ PRD_treat, data = subset(final_merged_data, post_treatment == 0))
 result
 
-ols <- feols(share_PRD_valid_vote ~ PRD_treat | mun_id, data = subset(final_merged_data, post_treatment == 0))
+ols <- feols(share_PRD_valid_vote ~ PRD_treat | mun_id + mun_seat_id + year.x, 
+             data = subset(final_merged_data, post_treatment == 0))
 summary(ols)
 
-result2 <- t.test(share_PRD_registered_voters ~ PRD_treat, data = subset(final_merged_data, post_treatment == 0))
-result2
-
-ols <- feols(share_PRD_registered_voters ~ PRD_treat | mun_id, data = subset(final_merged_data, post_treatment == 0))
+ols <- feols(share_PRD_registered_voters ~ PRD_treat | mun_id + mun_seat_id + year.x, 
+             data = subset(final_merged_data, post_treatment == 0))
 summary(ols)
 
-result3 <- t.test(share_PAN_registered_voters ~ PRD_treat, data = subset(final_merged_data, post_treatment == 0))
-result3
+ols <- feols(share_PRI_registered_voters ~ PRD_treat | mun_id + mun_seat_id + year.x, 
+             data = subset(final_merged_data, post_treatment == 0))
+summary(ols)
+
 
 # Model 1: PRD vote share with municipality and year fixed effects ----
-model_1 <- feols(share_PRD_valid_vote ~ treatment_times_post + dist_standardized | 
-                   mun_id + mun_seat_id + year.x, 
-                 cluster = "precinct", 
+model_1 <- feols(share_PRD_valid_vote ~ treatment_times_post + turnout#+ dist_standardized
+                 #+ share_PRI_valid_vote + share_PAN_valid_vote 
+                 | precinct_id + mun_seat_id + year.x, 
+                 cluster = "precinct_id", 
                  data = final_merged_data)
 
 etable(model_1, digits = "r3")
 
 # Model 2: PRD vote share with municipality pair fixed effects ----
-model_2 <- feols(share_PRD_valid_vote ~ treatment_times_post + dist_standardized  | 
-                   mun_pair_id + year.x, 
-                 cluster = "precinct", 
+model_2 <- feols(share_PRD_valid_vote ~ treatment_times_post + turnout | 
+                   precinct_mun_pair + year.x, 
+                 cluster = "precinct_id", 
                  data = final_merged_data)
 
 etable(model_2, digits = "r3")
 
-model_3 <- feols(share_PRD_registered_voters ~ treatment_times_post + dist_standardized  | 
-                   mun_id + mun_seat_id + year.x, 
-                 cluster = "precinct", 
+model_3 <- feols(share_PRD_registered_voters ~ treatment_times_post +turnout # + dist_standardized 
+                   | precinct_id + mun_seat_id + year.x, 
+                 cluster = "precinct_id", 
                  data = final_merged_data)
 
 etable(model_3, digits = "r3")
 
-model_4 <- feols(share_PRD_registered_voters ~ treatment_times_post + dist_standardized + registered_voters | 
-                   mun_pair_id + year.x, 
-                 cluster = "precinct", 
-                 data = final_merged_data)
-
-etable(model_4, digits = "r3")
-
-model_4 <- feols(PAN_vote ~ treatment_times_post + dist_standardized + total | 
-                   mun_pair_id + year.x, 
-                 cluster = "precinct", 
+model_4 <- feols(share_PRD_registered_voters ~ treatment_times_post + turnout #+ dist_standardized + registered_voters | 
+                   |precinct_mun_pair + year.x, 
+                 cluster = "precinct_id", 
                  data = final_merged_data)
 
 etable(model_4, digits = "r3")
 
 # Model 5: turnout ----
-model_5 <- feols(turnout ~ treatment_times_post + dist_standardized | 
-                   mun_id + mun_seat_id + year.x, 
-                 cluster = "precinct", 
+model_5 <- feols(turnout ~ treatment_times_post #+ dist_standardized | 
+                   | precinct_id + mun_seat_id + year.x, 
+                 cluster = "precinct_id", 
                  data = final_merged_data)
 
 etable(model_5, digits = "r3")
 
 
-model_6 <- feols(share_PAN_valid_vote ~ treatment_times_post + dist_standardized | 
-                   mun_pair_id + year.x, 
-                 cluster = "precinct", 
+model_6 <- feols(share_PAN_valid_vote ~ treatment_times_post + dist_standardized + turnout | 
+                   precinct_mun_pair + year.x, 
+                 cluster = "precinct_id", 
                  data = final_merged_data)
 
 etable(model_6, digits = "r3")
 
-model_7 <- feols(share_PAN_registered_voters ~ treatment_times_post + dist_standardized | 
-                   mun_pair_id + year.x, 
-                 cluster = "precinct", 
+model_7 <- feols(share_PAN_registered_voters ~ treatment_times_post + turnout | 
+                   precinct_mun_pair + year.x, 
+                 cluster = "precinct_id", 
                  data = final_merged_data)
 
 etable(model_7, digits = "r3")
 
-model_8 <- feols(share_PRI_valid_vote ~ treatment_times_post + dist_standardized | 
-                   mun_pair_id + year.x, 
-                 cluster = "precinct", 
+model_8 <- feols(share_PRI_valid_vote ~ treatment_times_post + turnout #+ dist_standardized | 
+                   | precinct_mun_pair + year.x, 
+                 cluster = "precinct_id", 
                  data = final_merged_data)
 
 etable(model_8, digits = "r3")
 
-model_9 <- feols(share_PRI_registered_voters ~ treatment_times_post + dist_standardized + registered_voters | 
-                   mun_pair_id + year.x, 
-                 cluster = "precinct", 
+model_9 <- feols(share_PRI_registered_voters ~ treatment_times_post + turnout #+ dist_standardized + registered_voters | 
+                   |precinct_mun_pair + year.x, 
+                 cluster = "precinct_id", 
                  data = final_merged_data)
 
 etable(model_9, digits = "r3")
+
+etable(model_5, model_2, model_6, model_8, model_4, model_7, model_9, )
 
 # =============================================================================
 # 7. SUMMARY STATISTICS AND DIAGNOSTICS
