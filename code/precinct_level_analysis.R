@@ -52,7 +52,8 @@ bw <- rdbwselect(y = nearest_neighbor_PRD$change_pct_PRD,
 nn_muns_10 <- unique(nearest_neighbor_PRD$neighbor[abs(nearest_neighbor_PRD$PRD_margin) < 0.1]) #bw$bws[1]])
 nn_muns_5 <- unique(nearest_neighbor_PRD$neighbor[abs(nearest_neighbor_PRD$PRD_margin) < 0.05]) #bw$bws[1]])
 main_muns <- unique(nearest_neighbor_PRD$mun_id) #[abs(nearest_neighbor_PRD$PRD_margin) < bw$bws[1]])
-nn_muns <- unique(nearest_neighbor_PRD$neighbor)
+#nn_muns <- unique(nearest_neighbor_PRD$neighbor)
+nn_muns <- unique(nearest_neighbor_PRD$neighbor[abs(nearest_neighbor_PRD$PRD_margin) < bw$bws[1]])
 
 # =============================================================================
 # 3. MUNICIPALITY MATCHING AND VALIDATION
@@ -167,7 +168,7 @@ summary(ols)
 
 
 # Model 1: PRD vote share with municipality and year fixed effects ----
-model_1 <- feols(share_PRD_valid_vote ~ treatment_times_post + turnout#+ dist_standardized
+model_1 <- feols(share_PRD_valid_vote ~ treatment_times_post #+ turnout#+ dist_standardized
                  #+ share_PRI_valid_vote + share_PAN_valid_vote 
                  | precinct_id + mun_seat_id + year.x, 
                  cluster = "precinct_id", 
@@ -176,14 +177,14 @@ model_1 <- feols(share_PRD_valid_vote ~ treatment_times_post + turnout#+ dist_st
 etable(model_1, digits = "r3")
 
 # Model 2: PRD vote share with municipality pair fixed effects ----
-model_2 <- feols(share_PRD_valid_vote ~ treatment_times_post + turnout | 
-                   precinct_mun_pair + year.x, 
+model_2 <- feols(share_PRD_valid_vote ~ treatment_times_post #+ turnout  
+                   | precinct_mun_pair + year.x, 
                  cluster = "precinct_id", 
                  data = final_merged_data)
 
 etable(model_2, digits = "r3")
 
-model_3 <- feols(share_PRD_registered_voters ~ treatment_times_post +turnout # + dist_standardized 
+model_3 <- feols(share_PRD_registered_voters ~ treatment_times_post #+turnout # + dist_standardized 
                    | precinct_id + mun_seat_id + year.x, 
                  cluster = "precinct_id", 
                  data = final_merged_data)
@@ -199,42 +200,42 @@ etable(model_4, digits = "r3")
 
 # Model 5: turnout ----
 model_5 <- feols(turnout ~ treatment_times_post #+ dist_standardized | 
-                   | precinct_id + mun_seat_id + year.x, 
+                   | precinct_mun_pair + year.x, 
                  cluster = "precinct_id", 
                  data = final_merged_data)
 
 etable(model_5, digits = "r3")
 
 
-model_6 <- feols(share_PAN_valid_vote ~ treatment_times_post + dist_standardized + turnout | 
-                   precinct_mun_pair + year.x, 
+model_6 <- feols(share_PAN_valid_vote ~ treatment_times_post + dist_standardized #+ turnout  
+                   | precinct_mun_pair + year.x, 
                  cluster = "precinct_id", 
                  data = final_merged_data)
 
 etable(model_6, digits = "r3")
 
-model_7 <- feols(share_PAN_registered_voters ~ treatment_times_post + turnout | 
-                   precinct_mun_pair + year.x, 
+model_7 <- feols(share_PAN_registered_voters ~ treatment_times_post
+                   | precinct_mun_pair + year.x, 
                  cluster = "precinct_id", 
                  data = final_merged_data)
 
 etable(model_7, digits = "r3")
 
-model_8 <- feols(share_PRI_valid_vote ~ treatment_times_post + turnout #+ dist_standardized | 
+model_8 <- feols(share_PRI_valid_vote ~ treatment_times_post #+ turnout #+ dist_standardized | 
                    | precinct_mun_pair + year.x, 
                  cluster = "precinct_id", 
                  data = final_merged_data)
 
 etable(model_8, digits = "r3")
 
-model_9 <- feols(share_PRI_registered_voters ~ treatment_times_post + turnout #+ dist_standardized + registered_voters | 
+model_9 <- feols(share_PRI_registered_voters ~ treatment_times_post #+ turnout #+ dist_standardized + registered_voters | 
                    |precinct_mun_pair + year.x, 
                  cluster = "precinct_id", 
                  data = final_merged_data)
 
 etable(model_9, digits = "r3")
 
-etable(model_5, model_2, model_6, model_8, model_4, model_7, model_9, )
+etable(model_5, model_2, model_6, model_8, model_4, model_7, model_9 )
 
 # =============================================================================
 # 7. SUMMARY STATISTICS AND DIAGNOSTICS
