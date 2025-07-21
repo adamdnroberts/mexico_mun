@@ -14,6 +14,8 @@ new2 <- nearest_neighbor_PRD %>% inner_join(js, by = join_by("mun_id" == "mun_id
 
 new <- new1 %>% filter(main_estado == ref_estado)
 
+muns <- unique(nearest_neighbor_PRD$mun_id)
+
 new$change_pct_PRD <- new$ref_PRD_pct - new$ref_next_PRD_pct
 new$change_pct_PRI <- new$ref_PRI_pct - new$ref_next_PRI_pct
 new$change_pct_PAN <- new$ref_PAN_pct - new$ref_next_PAN_pct
@@ -21,6 +23,8 @@ new$PRD_treat <- as.numeric(new$PRD_margin > 0)
 new$above_median_js <- ifelse(new$js >= median(new$js), 1, 0)
 new$PRD_treat_times_js <- new$PRD_treat * new$js
 new$dist_std <- scale(new$dH)
+
+new <- new %>% filter(mun_id %in% muns)
 
 #base model
 m1 <- feols(change_pct_PRD ~ PRD_treat*above_median_js + dist_std 
@@ -56,7 +60,7 @@ m6 <- feols(change_pct_PAN ~ PRD_treat*above_median_js + dist_std
             cluster = "neighbor",
             data = new)
 
-etable(m1, m2, m3, m4, m5, m6, digits = "r3", digits.stats = "r3", tex = T)
+etable(m1, m2, m3, m4, m5, m6, digits = "r3", digits.stats = "r3", tex = F)
 
 linearHypothesis(m2, "js = PRD_treat:js")
 
