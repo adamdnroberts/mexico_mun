@@ -65,6 +65,9 @@ load("~/mexico_mun/data/jaccard_similarity_AM_FM.Rdata")
 new <- merge(new0, js, by = c("mun_id", "ref_mun_id"))
 
 new$change_pct_PRD <- new$ref_PRD_pct - new$ref_next_PRD_pct
+new$change_pct_PRI <- new$ref_PRI_pct - new$ref_next_PRI_pct
+new$change_pct_PAN <- new$ref_PAN_pct - new$ref_next_PAN_pct
+
 new$PRD_treat <- ifelse(new$mun_id %in% treated_muns_did, 1, 0)
 
 new$t <- NA
@@ -79,9 +82,11 @@ new$t_factor <- relevel(new$t_factor, ref = "0")
 
 new$mun_year <- paste(new$mun_id, new$year)
 
-m1 <- feols(change_pct_PRD ~ PRD_treat*js*t_factor + dH 
-            + ref_PRD_pct # + ref_PRI_pct + ref_PAN_pct
-            | mun_id + year + mun_year ,
+new$dist_std <- scale(new$dH)
+
+m1 <- feols(change_pct_PRD ~ PRD_treat*js*t_factor + dist_std 
+            + ref_PRD_pct + ref_PRI_pct + ref_PAN_pct
+            | mun_id + year + mun_year,
             cluster = "ref_mun_id",
             data = new)
 etable(m1, digits = "r3")
@@ -121,7 +126,32 @@ p <- ggplot(plot_data, aes(x = t, y = est)) +
   theme_minimal()
 print(p)
 
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Dissertation_Prospectus_Presentation/images/did_parrallel_trends.png", 
+       plot = p, width = 6, height = 4)
+
 linearHypothesis(m1, c("PRD_treat:js:t_factor-2 = 0", "PRD_treat:js:t_factor-1 = 0", "PRD_treat:js:t_factor0 = 0"))
 linearHypothesis(m1, "PRD_treat:js:as.factor(t)-2 = PRD_treat:js:as.factor(t)1")
 linearHypothesis(m1, "PRD_treat:js:as.factor(t)-1 = PRD_treat:js:as.factor(t)1")
 linearHypothesis(m1, "PRD_treat:js:as.factor(t)0 = PRD_treat:js:as.factor(t)1")
+
+
+m1 <- feols(change_pct_PRD ~ PRD_treat*js*t_factor + dist_std 
+            + ref_PRD_pct + ref_PRI_pct + ref_PAN_pct
+            | mun_id + year + mun_year,
+            cluster = "ref_mun_id",
+            data = subset(new, t>= 1) )
+
+m2 <- feols(change_pct_PRI ~ PRD_treat*js*t_factor + dist_std 
+            + ref_PRD_pct + ref_PRI_pct + ref_PAN_pct
+            | mun_id + year + mun_year,
+            cluster = "ref_mun_id",
+            data = subset(new, t>= 1) )
+
+m3 <- feols(change_pct_PAN ~ PRD_treat*js*t_factor + dist_std 
+            + ref_PRD_pct + ref_PRI_pct + ref_PAN_pct
+            | mun_id + year + mun_year,
+            cluster = "ref_mun_id",
+            data = subset(new, t>= 1) )
+
+etable(m1,m2,m3, digits = "r3", tex = T)
+
