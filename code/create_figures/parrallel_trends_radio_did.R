@@ -126,7 +126,7 @@ p <- ggplot(plot_data, aes(x = t, y = est)) +
   theme_minimal()
 print(p)
 
-ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Dissertation_Prospectus_Presentation/images/did_parrallel_trends.png", 
+ggsave(filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/Dissertation_Prospectus_Presentation/images/did_parrallel_trends.pdf", 
        plot = p, width = 6, height = 4)
 
 linearHypothesis(m1, c("PRD_treat:js:t_factor-2 = 0", "PRD_treat:js:t_factor-1 = 0", "PRD_treat:js:t_factor0 = 0"))
