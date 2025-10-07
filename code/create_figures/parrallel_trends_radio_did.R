@@ -141,13 +141,21 @@ new$mun_year <- paste(new$mun_id, new$year)
 
 new$dist_std <- scale(new$dH)
 
+new$weight <- 1 / new$dH
+
 pt <- new %>%
   filter(t != -3) %>%
   group_by(PRD_treat, t) %>%
-  summarize(avg_outcome = mean(change_pct_PRD, na.rm = T)) %>%
+  summarize(
+    avg_outcome = mean(change_pct_PRD, na.rm = T),
+    weighted_avg_outcome = sum(change_pct_PRD * weight, na.rm = T) / sum(weight)
+  ) %>%
   mutate(PRD_treat = as.factor(PRD_treat))
 
-parallel_trends <- ggplot(pt, aes(x = t, y = avg_outcome, color = PRD_treat)) +
+parallel_trends <- ggplot(
+  pt,
+  aes(x = t, y = weighted_avg_outcome, color = PRD_treat)
+) +
   geom_vline(xintercept = 0, color = "red", linetype = 2) +
   geom_point() +
   geom_line(data = pt %>% filter(PRD_treat == 0)) +

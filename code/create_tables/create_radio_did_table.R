@@ -30,59 +30,61 @@ new <- new %>% filter(mun_id %in% muns)
 
 #base model
 m1 <- feols(
-  change_pct_PRD ~ PRD_treat * above_median_js + dist_std | mun_id,
-  cluster = "neighbor",
+  change_pct_PRD ~ PRD_treat * js + dist_std | mun_id + ref_year,
+  cluster = "neighbor + mun_id",
   data = new
 )
+summary(m1)
 
 m2 <- feols(
   change_pct_PRD ~
     PRD_treat *
-      above_median_js +
+      js +
       dist_std +
       ref_PRD_pct +
       ref_PRI_pct +
       ref_PAN_pct |
-      mun_id,
-  cluster = "neighbor",
+      mun_id + ref_year,
+  cluster = "neighbor + mun_id",
   data = new
 )
+summary(m2)
 
 m3 <- feols(
-  change_pct_PRI ~ PRD_treat * above_median_js + dist_std | mun_id,
-  cluster = "neighbor",
+  change_pct_PRI ~ PRD_treat * js + dist_std | mun_id + year,
+  cluster = "neighbor + mun_id",
   data = new
 )
 
 m4 <- feols(
   change_pct_PRI ~
     PRD_treat *
-      above_median_js +
+      js +
       dist_std +
       ref_PRD_pct +
       ref_PRI_pct +
       ref_PAN_pct |
-      mun_id,
-  cluster = "neighbor",
+      mun_id + year,
+  cluster = "neighbor + mun_id",
   data = new
 )
 
 m5 <- feols(
-  change_pct_PAN ~ PRD_treat * above_median_js + dist_std | mun_id,
-  cluster = "neighbor",
+  change_pct_PAN ~ PRD_treat * js + dist_std | mun_id,
+  cluster = "neighbor + mun_id",
   data = new
 )
 
 m6 <- feols(
   change_pct_PAN ~
     PRD_treat *
-      above_median_js +
+      js +
       dist_std +
       ref_PRD_pct +
       ref_PRI_pct +
       ref_PAN_pct |
       mun_id,
-  cluster = "neighbor",
+  cluster = "neighbor + mun_id",
   data = new
 )
 
