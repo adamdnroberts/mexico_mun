@@ -141,6 +141,32 @@ new$mun_year <- paste(new$mun_id, new$year)
 
 new$dist_std <- scale(new$dH)
 
+pt <- new %>%
+  filter(t != -3) %>%
+  group_by(PRD_treat, t) %>%
+  summarize(avg_outcome = mean(change_pct_PRD, na.rm = T)) %>%
+  mutate(PRD_treat = as.factor(PRD_treat))
+
+parallel_trends <- ggplot(pt, aes(x = t, y = avg_outcome, color = PRD_treat)) +
+  geom_vline(xintercept = 0, color = "red", linetype = 2) +
+  geom_point() +
+  geom_line(data = pt %>% filter(PRD_treat == 0)) +
+  geom_line(data = pt %>% filter(PRD_treat == 1)) +
+  scale_color_manual(
+    name = "PRD Exposure",
+    values = c("0" = "gray30", "1" = "gray70")
+  ) +
+  labs(x = "Election", y = "Average Change in PRD Vote Share") +
+  theme_classic()
+print(parallel_trends)
+
+ggsave(
+  filename = "C:/Users/adamd/Dropbox/Apps/Overleaf/TYP_draft/images/parallel_trends_test.pdf",
+  plot = parallel_trends,
+  width = 6,
+  height = 4
+)
+
 m1 <- feols(
   change_pct_PRD ~
     PRD_treat *
@@ -152,7 +178,7 @@ m1 <- feols(
       ref_PAN_pct |
       mun_id + year + mun_year,
   cluster = "ref_mun_id",
-  data = new
+  data = new %>% filter(t != -3)
 )
 etable(m1, digits = "r3")
 
