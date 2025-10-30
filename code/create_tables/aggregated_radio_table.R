@@ -31,11 +31,11 @@ new <- new %>% filter(mun_id %in% muns)
 aggregated_data <- new %>%
   group_by(neighbor) %>%
   summarize(
-    treatment_intensity = mean(PRD_treat_times_js),
-    treatment = mean(PRD_treat),
+    treatment_intensity = sum(PRD_treat_times_js),
+    treatment = sum(PRD_treat),
     radio = mean(js),
     change_pct_PRD = first(change_pct_PRD),
-    dist_std = mean(dist_std),
+    dist = mean(dH),
     ref_PRD_pct = first(ref_PRD_pct),
     ref_PAN_pct = first(ref_PAN_pct),
     ref_PRI_pct = first(ref_PRI_pct),
@@ -43,48 +43,32 @@ aggregated_data <- new %>%
     year = mean(ref_year)
   )
 
-aggregated_data$treatment_intensity_std <- scale(
-  aggregated_data$treatment_intensity
-)
-aggregated_data$treatment_std <- scale(aggregated_data$treatment)
-aggregated_data$radio_std <- scale(aggregated_data$radio)
-
-
 #base model
 m1 <- feols(
-  change_pct_PRD ~
-    treatment_std +
-      radio_std +
-      treatment_intensity_std |
-      year,
+  change_pct_PRD ~ treatment_intensity + treatment | estado,
   data = aggregated_data
 )
 summary(m1)
 
 m2 <- feols(
   change_pct_PRD ~
-    treatment_std +
-      radio_std +
-      treatment_intensity_std +
-      dist_std +
-      ref_PRD_pct +
-      ref_PRI_pct +
-      ref_PAN_pct |
-      year,
+    treatment_intensity +
+      treatment +
+      dist |
+      estado,
   data = aggregated_data
 )
 summary(m2)
 
 m3 <- feols(
   change_pct_PRD ~
-    treatment_std +
-      radio_std +
-      treatment_intensity_std +
-      dist_std +
-      ref_PRD_pct +
-      ref_PRI_pct +
-      ref_PAN_pct,
-  data = aggregated_data
+    treatment_intensity +
+      treatment +
+      dist +
+      ref_PRD_pct |
+      estado,
+  data = filter(aggregated_data, treatment_intensity > 0)
 )
+summary(m3)
 
-etable(m1, m2, digits = "r3", digits.stats = "r3", tex = T)
+etable(m1, m2, digits = "r3", digits.stats = "r3", tex = F)
